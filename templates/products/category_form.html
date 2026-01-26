@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-form-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px 40px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #cbd5e0;
+        color: #2d3748;
+        transform: translateY(-2px);
+    }
+    
+    .icon-preview-large {
+        font-size: 5rem;
+        color: #667eea;
+        padding: 30px;
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        border-radius: 15px;
+        margin: 20px 0;
+    }
+    
+    .icon-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+    
+    .icon-option {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.8rem;
+        color: #4a5568;
+    }
+    
+    .icon-option:hover {
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .icon-option.selected {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+    }
+    
+    .help-text {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="category-form-page">
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="page-header animate__animated animate__fadeInDown">
+            <h1>
+                <i class="fas fa-folder-plus"></i> 
+                {{ title }}
+            </h1>
+        </div>
+        
+        <!-- Форма -->
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="form-card animate__animated animate__fadeInUp">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Ошибка!</strong> Пожалуйста, исправьте ошибки в форме.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Название -->
+                        <div class="mb-4">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="fas fa-tag"></i> Название категории *
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger mt-2">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Иконка -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-icons"></i> Выберите иконку
+                            </label>
+                            <input type="hidden" name="icon" id="{{ form.icon.id_for_label }}" value="{{ form.icon.value|default:'fa-box' }}">
+                            <div class="icon-preview-large text-center mb-3" id="iconPreview">
+                                <i class="fas {{ form.icon.value|default:'fa-box' }}"></i>
+                            </div>
+                            <div class="icon-selector">
+                                <!-- Иконки будут добавлены через JavaScript -->
+                            </div>
+                            {% if form.icon.errors %}
+                            <div class="text-danger mt-2">{{ form.icon.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Описание -->
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left"></i> Описание
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="text-danger mt-2">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Кнопки -->
+                        <div class="d-flex gap-3 justify-content-end mt-5">
+                            <a href="{% url 'products:product_list' %}" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Отмена
+                            </a>
+                            <button type="submit" class="btn btn-submit">
+                                <i class="fas fa-check"></i> Создать категорию
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Список иконок для категорий продуктов
+    const foodIcons = [
+        'fa-box', 'fa-apple-alt', 'fa-bread-slice', 'fa-cheese', 'fa-fish',
+        'fa-hamburger', 'fa-ice-cream', 'fa-pizza-slice', 'fa-hotdog', 'fa-cookie',
+        'fa-egg', 'fa-carrot', 'fa-pepper-hot', 'fa-lemon', 'fa-drumstick-bite',
+        'fa-bacon', 'fa-bone', 'fa-candy-cane', 'fa-glass-whiskey', 'fa-wine-bottle',
+        'fa-beer', 'fa-coffee', 'fa-mug-hot', 'fa-wine-glass', 'fa-blender',
+        'fa-birthday-cake', 'fa-cookie-bite', 'fa-mortar-pestle', 'fa-seedling', 'fa-leaf',
+        'fa-shopping-basket', 'fa-utensils', 'fa-flask', 'fa-jar', 'fa-bottles',
+        'fa-can-food', 'fa-wheat', 'fa-corn', 'fa-avocado', 'fa-strawberry'
+    ];
+    
+    const iconSelector = document.querySelector('.icon-selector');
+    const iconInput = document.getElementById('{{ form.icon.id_for_label }}');
+    const iconPreview = document.querySelector('#iconPreview i');
+    const currentIcon = iconInput.value || 'fa-box';
+    
+    // Создаем опции для выбора иконок
+    foodIcons.forEach(icon => {
+        const option = document.createElement('div');
+        option.className = 'icon-option';
+        if (icon === currentIcon) {
+            option.classList.add('selected');
+        }
+        option.innerHTML = `<i class="fas ${icon}"></i>`;
+        option.title = icon;
+        
+        option.addEventListener('click', function() {
+            // Убираем выделение со всех иконок
+            document.querySelectorAll('.icon-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Выделяем выбранную иконку
+            this.classList.add('selected');
+            
+            // Обновляем скрытое поле и превью
+            iconInput.value = icon;
+            iconPreview.className = 'fas ' + icon;
+        });
+        
+        iconSelector.appendChild(option);
+    });
+</script>
+{% endblock %}

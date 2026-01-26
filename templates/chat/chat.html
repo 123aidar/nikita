@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Чат сотрудников - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f0f0f0;
+    }
+    
+    .message {
+        margin-bottom: 15px;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 12px 18px;
+        border-radius: 20px;
+        position: relative;
+        word-wrap: break-word;
+    }
+    
+    .message-own .message-bubble {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .message-other .message-bubble {
+        background: white;
+        color: #333;
+        border-bottom-left-radius: 5px;
+    }
+    
+    .message-own {
+        text-align: right;
+    }
+    
+    .message-sender {
+        font-weight: bold;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 5px;
+    }
+    
+    .sender-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+    }
+    
+    .chat-input-container {
+        background: white;
+        padding: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .chat-input {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .chat-input input {
+        flex: 1;
+        border-radius: 25px;
+        border: 2px solid #e0e0e0;
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+    
+    .chat-input input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+    
+    .send-button {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, #45a049 100%);
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .send-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    }
+    
+    .emoji-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .emoji-button:hover {
+        transform: scale(1.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="chat-container animate__animated animate__fadeInUp">
+            <div class="chat-header">
+                <h3><i class="fas fa-comments"></i> Чат сотрудников</h3>
+                <p class="mb-0">Общайтесь с коллегами в реальном времени</p>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                {% for msg in messages %}
+                <div class="message {% if msg.sender.id == user.id %}message-own{% else %}message-other{% endif %}">
+                    <div class="message-sender">
+                        {% if msg.sender.avatar %}
+                        <img src="{{ msg.sender.avatar.url }}" alt="{{ msg.sender.get_full_name }}" class="sender-avatar">
+                        {% else %}
+                        <i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                        {% endif %}
+                        <span>{{ msg.sender.get_full_name }}</span>
+                        <span class="badge bg-secondary">{{ msg.sender.get_role_display }}</span>
+                    </div>
+                    <div class="message-bubble">
+                        {{ msg.message }}
+                        <div class="message-time">{{ msg.timestamp|date:"H:i" }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="chat-input">
+                    <button class="emoji-button" onclick="addEmoji('😊')">😊</button>
+                    <button class="emoji-button" onclick="addEmoji('👍')">👍</button>
+                    <button class="emoji-button" onclick="addEmoji('❤️')">❤️</button>
+                    <input type="text" id="messageInput" placeholder="Введите сообщение..." onkeypress="handleKeyPress(event)">
+                    <button class="send-button" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const userId = {{ user.id }};
+    const userName = "{{ user.get_full_name }}";
+    const userAvatar = "{% if user.avatar %}{{ user.avatar.url }}{% endif %}";
+    const userRole = "{{ user.get_role_display }}";
+    
+    // WebSocket connection
+    let chatSocket = null;
+    
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        chatSocket = new WebSocket(protocol + '//' + window.location.host + '/ws/chat/');
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            addMessageToChat(data);
+        };
+        
+        chatSocket.onclose = function(e) {
+            console.log('Chat socket closed. Reconnecting...');
+            setTimeout(connectWebSocket, 1000);
+        };
+    }
+    
+    // Fallback to polling if WebSocket is not available
+    function loadMessages() {
+        fetch('{% url "chat:get_messages" %}')
+            .then(response => response.json())
+            .then(data => {
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.innerHTML = '';
+                data.messages.forEach(msg => {
+                    addMessageToChat(msg, false);
+                });
+                scrollToBottom();
+            });
+    }
+    
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+        
+        if (message === '') return;
+        
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'user_id': userId
+            }));
+        } else {
+            // Fallback: send via AJAX
+            fetch('{% url "chat:chat" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    'message': message
+                })
+            }).then(() => loadMessages());
+        }
+        
+        input.value = '';
+    }
+    
+    function addMessageToChat(data, animate = true) {
+        const chatMessages = document.getElementById('chatMessages');
+        const isOwn = data.user_id == userId || data.sender_id == userId;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isOwn ? 'message-own' : 'message-other'}`;
+        if (animate) messageDiv.style.animation = 'slideIn 0.3s ease';
+        
+        const senderName = data.sender || userName;
+        const avatarHtml = data.sender_avatar ? 
+            `<img src="${data.sender_avatar}" alt="${senderName}" class="sender-avatar">` :
+            '<i class="fas fa-user-circle" style="font-size: 1.5rem; color: var(--primary-color);"></i>';
+        
+        messageDiv.innerHTML = `
+            <div class="message-sender">
+                ${avatarHtml}
+                <span>${senderName}</span>
+                <span class="badge bg-secondary">${userRole}</span>
+            </div>
+            <div class="message-bubble">
+                ${data.message}
+                <div class="message-time">${data.timestamp || new Date().toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'})}</div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+    
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+    
+    function addEmoji(emoji) {
+        const input = document.getElementById('messageInput');
+        input.value += emoji;
+        input.focus();
+    }
+    
+    // Initialize
+    try {
+        connectWebSocket();
+    } catch(e) {
+        console.log('WebSocket not available, using polling');
+        setInterval(loadMessages, 3000);
+    }
+    
+    scrollToBottom();
+</script>
+{% endblock %}

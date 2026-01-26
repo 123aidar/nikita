@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+
+{% block title %}Проведение инвентаризации - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px 40px;
+        color: white;
+    }
+    
+    .form-header h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-body {
+        padding: 40px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+    }
+    
+    .form-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+        border-left: 4px solid #667eea;
+        border-radius: 8px;
+        color: #2d3748;
+        font-size: 0.85rem;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(113, 128, 150, 0.3);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="form-card animate__animated animate__fadeInUp">
+                    <div class="form-header">
+                        <h3>
+                            <i class="fas fa-clipboard-list"></i> 
+                            Проведение инвентаризации
+                        </h3>
+                    </div>
+                    <div class="form-body">
+                        <form method="post" id="inventoryForm">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="flex-grow-1 me-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-layer-group"></i>
+                                            Категория (фильтр)
+                                        </label>
+                                        <select class="form-select" id="category_filter">
+                                            <option value="">Все категории</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div style="padding-top: 32px;">
+                                        <button type="button" class="btn btn-success" onclick="addInventoryItem()" style="white-space: nowrap;">
+                                            <i class="fas fa-plus"></i> Добавить товар
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="fas fa-clipboard-list"></i> Список товаров для инвентаризации</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="inventoryTable">
+                                        <thead>
+                                            <tr>
+                                                <th width="35%">Товар</th>
+                                                <th width="20%">Ожидаемое кол-во</th>
+                                                <th width="20%">Фактическое кол-во</th>
+                                                <th width="15%">Расхождение</th>
+                                                <th width="10%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="inventoryTableBody">
+                                            <!-- Строки будут добавляться динамически -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Скрытое поле для данных -->
+                            <input type="hidden" name="items_data" id="itemsData">
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn-submit">
+                                    <i class="fas fa-check"></i> 
+                                    Провести инвентаризацию
+                                </button>
+                                <a href="{% url 'inventory:inventory_list' %}" class="btn-cancel">
+                                    <i class="fas fa-times"></i> 
+                                    Отмена
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаблон для новой строки -->
+<template id="inventoryRowTemplate">
+    <tr class="inventory-row animate__animated animate__fadeIn">
+        <td>
+            <select class="form-select product-select" onchange="updateExpectedQuantity(this)" required>
+                <option value="">Выберите товар...</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" 
+                        data-quantity="{{ product.quantity }}"
+                        data-category="{{ product.category.id }}">
+                    {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control expected-input" step="0.01" readonly>
+        </td>
+        <td>
+            <input type="number" class="form-control actual-input" step="0.01" min="0" 
+                   onchange="calculateDifference(this)" required>
+        </td>
+        <td>
+            <strong class="difference-value">-</strong>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeInventoryItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<script>
+// Создаем мапу товаров с их категориями и количеством
+const productsData = {
+    {% for product in products %}
+    {{ product.id }}: {
+        name: "{{ product.name|escapejs }}",
+        category: {{ product.category.id }},
+        quantity: {{ product.quantity }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function addInventoryItem() {
+    const template = document.getElementById('inventoryRowTemplate');
+    const clone = template.content.cloneNode(true);
+    
+    // Применяем фильтр категории к новой строке
+    const categoryFilter = document.getElementById('category_filter');
+    if (categoryFilter.value) {
+        const select = clone.querySelector('.product-select');
+        const options = Array.from(select.options);
+        options.forEach(option => {
+            if (option.value && option.dataset.category !== categoryFilter.value) {
+                option.remove();
+            }
+        });
+    }
+    
+    document.getElementById('inventoryTableBody').appendChild(clone);
+}
+
+function removeInventoryItem(button) {
+    button.closest('tr').remove();
+}
+
+function updateExpectedQuantity(select) {
+    const row = select.closest('tr');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption.value) {
+        const quantity = parseFloat(selectedOption.dataset.quantity);
+        row.querySelector('.expected-input').value = quantity.toFixed(2);
+        row.querySelector('.actual-input').value = '';
+        row.querySelector('.difference-value').textContent = '-';
+    } else {
+        row.querySelector('.expected-input').value = '';
+        row.querySelector('.actual-input').value = '';
+        row.querySelector('.difference-value').textContent = '-';
+    }
+}
+
+function calculateDifference(input) {
+    const row = input.closest('tr');
+    const expected = parseFloat(row.querySelector('.expected-input').value) || 0;
+    const actual = parseFloat(input.value) || 0;
+    const difference = actual - expected;
+    
+    const diffElement = row.querySelector('.difference-value');
+    diffElement.textContent = difference.toFixed(2);
+    
+    if (difference > 0) {
+        diffElement.style.color = '#48bb78'; // Зеленый для излишков
+        diffElement.textContent = '+' + difference.toFixed(2);
+    } else if (difference < 0) {
+        diffElement.style.color = '#f56565'; // Красный для недостачи
+    } else {
+        diffElement.style.color = '#718096'; // Серый для точного совпадения
+    }
+}
+
+// Фильтрация по категории
+document.getElementById('category_filter').addEventListener('change', function() {
+    const categoryId = this.value;
+    
+    // Обновляем все существующие select'ы
+    document.querySelectorAll('.product-select').forEach(select => {
+        const selectedValue = select.value;
+        
+        // Пересоздаем опции
+        select.innerHTML = '<option value="">Выберите товар...</option>';
+        
+        for (let productId in productsData) {
+            if (categoryId === '' || productsData[productId].category == categoryId) {
+                const option = document.createElement('option');
+                option.value = productId;
+                option.textContent = productsData[productId].name;
+                option.dataset.quantity = productsData[productId].quantity;
+                option.dataset.category = productsData[productId].category;
+                
+                if (productId == selectedValue) {
+                    option.selected = true;
+                }
+                
+                select.appendChild(option);
+            }
+        }
+    });
+});
+
+document.getElementById('inventoryForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const items = [];
+    let isValid = true;
+    
+    document.querySelectorAll('.inventory-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const expectedInput = row.querySelector('.expected-input');
+        const actualInput = row.querySelector('.actual-input');
+        
+        if (!productSelect.value || !actualInput.value) {
+            isValid = false;
+            return;
+        }
+        
+        items.push({
+            product_id: productSelect.value,
+            expected_quantity: expectedInput.value,
+            actual_quantity: actualInput.value
+        });
+    });
+    
+    if (!isValid || items.length === 0) {
+        alert('Заполните все поля и добавьте хотя бы один товар!');
+        return;
+    }
+    
+    document.getElementById('itemsData').value = JSON.stringify(items);
+    this.submit();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    addInventoryItem();
+});
+</script>
+{% endblock %}

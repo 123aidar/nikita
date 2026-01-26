@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Товарная накладная №{{ supply.id }} от {{ supply.supply_date|date:"d.m.Y" }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000;
+            margin: 20px;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 15px;
+        }
+        
+        .invoice-title {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+        }
+        
+        .invoice-number {
+            font-size: 14pt;
+            margin: 5px 0;
+        }
+        
+        .company-info {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-section {
+            border: 1px solid #ddd;
+            padding: 12px;
+            background: white;
+        }
+        
+        .info-section-title {
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            color: #2c5aa0;
+            border-bottom: 2px solid #2c5aa0;
+            padding-bottom: 5px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 140px;
+            color: #555;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: auto;
+        }
+        
+        .items-table thead {
+            background: #2c5aa0;
+            color: white;
+        }
+        
+        .items-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #2c5aa0;
+            font-size: 10pt;
+        }
+        
+        .items-table td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        .items-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .items-table tbody tr:hover {
+            background: #f0f0f0;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .total-section {
+            margin-top: 20px;
+            border: 2px solid #2c5aa0;
+            background: #f0f5ff;
+            padding: 15px;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 11pt;
+        }
+        
+        .total-row.grand-total {
+            border-top: 2px solid #2c5aa0;
+            margin-top: 10px;
+            padding-top: 12px;
+            font-size: 14pt;
+            font-weight: bold;
+        }
+        
+        .signatures {
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+        
+        .signature-block {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 30px;
+        }
+        
+        .signature-line {
+            margin-top: 40px;
+        }
+        
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .signature-field {
+            border-bottom: 1px solid #000;
+            min-height: 25px;
+            margin-bottom: 5px;
+        }
+        
+        .signature-label {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background: #1e3d6f;
+        }
+        
+        .notes-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background: #fffef0;
+            border-radius: 5px;
+        }
+        
+        .notes-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .footer-note {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Печать накладной
+    </button>
+
+    <div class="invoice-container">
+        <!-- Заголовок -->
+        <div class="invoice-header">
+            <div class="invoice-title">Товарная накладная</div>
+            <div class="invoice-number">№ {{ supply.id }} от {{ supply.supply_date|date:"d.m.Y" }}</div>
+        </div>
+
+        <!-- Информация о компании -->
+        <div class="company-info">
+            <div style="text-align: center; font-weight: bold; font-size: 13pt; margin-bottom: 10px;">
+                ПРОДУКТОВЫЙ МАГАЗИН "НА ПРОСТОРНОЙ"
+            </div>
+            <div style="text-align: center; font-size: 10pt; color: #666;">
+                Система управления складом и продажами
+            </div>
+        </div>
+
+        <!-- Информация о поставке -->
+        <div class="info-grid">
+            <div class="info-section">
+                <div class="info-section-title">ПОСТАВЩИК</div>
+                <div class="info-row">
+                    <div class="info-label">Наименование:</div>
+                    <div class="info-value">{{ supply.supplier }}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-section-title">ДОКУМЕНТ</div>
+                <div class="info-row">
+                    <div class="info-label">Дата поставки:</div>
+                    <div class="info-value">{{ supply.supply_date|date:"d.m.Y H:i" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Оформил:</div>
+                    <div class="info-value">{{ supply.created_by.get_full_name|default:"Не указан" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица товаров -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">№</th>
+                    <th style="width: 300px;">Наименование товара</th>
+                    <th style="width: 120px;">Категория</th>
+                    <th style="width: 80px;" class="text-center">Ед. изм.</th>
+                    <th style="width: 80px;" class="text-right">Кол-во</th>
+                    <th style="width: 100px;" class="text-right">Цена</th>
+                    <th style="width: 120px;" class="text-right">Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in supply_items %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td><strong>{{ item.product.name }}</strong></td>
+                    <td>{{ item.product.category.name }}</td>
+                    <td class="text-center">{{ item.product.unit }}</td>
+                    <td class="text-right">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.price_per_unit|floatformat:2 }} ₽</td>
+                    <td class="text-right"><strong>{{ item.get_total|floatformat:2 }} ₽</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 30px; color: #999;">
+                        Товары отсутствуют
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Итоговая информация -->
+        <div class="total-section">
+            <div class="total-row">
+                <span>Всего наименований:</span>
+                <strong>{{ supply_items.count }} шт.</strong>
+            </div>
+            <div class="total-row">
+                <span>Общее количество товаров:</span>
+                <strong>{% widthratio supply_items.aggregate.total_quantity|default:0 1 1 %} ед.</strong>
+            </div>
+            <div class="total-row grand-total">
+                <span>ИТОГО К ОПЛАТЕ:</span>
+                <span>{{ supply.total_cost|floatformat:2 }} ₽</span>
+            </div>
+        </div>
+
+        <!-- Примечания -->
+        {% if supply.notes %}
+        <div class="notes-section">
+            <div class="notes-title">Примечания:</div>
+            <div>{{ supply.notes|linebreaks }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Подписи -->
+        <div class="signatures">
+            <div style="font-weight: bold; margin-bottom: 20px;">
+                Товар принят полностью и в соответствии с накладной:
+            </div>
+            
+            <div class="signature-block">
+                <div class="signature-line">
+                    <div class="signature-title">Отпустил:</div>
+                    <div class="signature-field"></div>
+                    <div class="signature-label">(подпись, ФИО представителя поставщика)</div>
+                    <div style="margin-top: 15px;">
+                        <div style="display: inline-block; width: 100px; border-bottom: 1px solid #000; margin-right: 10px;"></div>
+                        <span class="signature-label">М.П.</span>
+                    </div>
+                </div>
+                
+                <div class="signature-line">
+                    <div class="signature-title">Принял:</div>
+                    <div class="signature-field">{{ supply.created_by.get_full_name|default:"" }}</div>
+                    <div class="signature-label">(подпись, ФИО материально ответственного лица)</div>
+                    <div style="margin-top: 15px;">
+                        <div style="display: inline-block; width: 100px; border-bottom: 1px solid #000; margin-right: 10px;"></div>
+                        <span class="signature-label">М.П.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Футер -->
+        <div class="footer-note">
+            <p>Накладная сформирована автоматически системой управления магазином</p>
+            <p>Дата формирования: {{ supply.supply_date|date:"d.m.Y H:i" }}</p>
+        </div>
+    </div>
+
+    <script>
+        // Автоматическое открытие диалога печати при загрузке (опционально)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

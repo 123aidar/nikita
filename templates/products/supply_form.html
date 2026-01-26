@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+
+{% block title %}Новая поставка{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supply-form-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        padding: 30px 40px;
+        color: white;
+    }
+    
+    .form-header h4 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-body {
+        padding: 40px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #48bb78;
+        box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+        outline: none;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid;
+        border-image: linear-gradient(90deg, #48bb78 0%, #38a169 100%);
+        border-image-slice: 1;
+    }
+    
+    .section-header h5 {
+        color: #2d3748;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .btn-add-item {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+    }
+    
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    
+    .modern-table thead tr {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+    
+    .modern-table thead th {
+        padding: 18px 15px;
+        color: white;
+        font-weight: 700;
+        text-align: left;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .modern-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .modern-table tbody tr:hover {
+        background: linear-gradient(135deg, #48bb7808 0%, #38a16908 100%);
+    }
+    
+    .modern-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+    }
+    
+    .modern-table tfoot {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    }
+    
+    .modern-table tfoot td {
+        padding: 20px 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .row-total {
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    #totalAmount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .btn-remove-item {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-remove-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        color: white;
+    }
+    
+    .btn-back {
+        background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(113, 128, 150, 0.3);
+        color: white;
+    }
+    
+    .unit-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 15px;
+        background: linear-gradient(135deg, #f7fafc 0%, #e2e8f0 100%);
+        border-radius: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="supply-form-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="form-card animate__animated animate__fadeIn">
+                    <div class="form-header">
+                        <h4>
+                            <i class="fas fa-truck"></i> 
+                            Новая поставка
+                        </h4>
+                    </div>
+                    <div class="form-body">
+                        <form method="post" id="supplyForm">
+                            {% csrf_token %}
+                            
+                            <!-- Информация о поставщике -->
+                            <div class="mb-4">
+                                <label for="supplier" class="form-label">
+                                    <i class="fas fa-building"></i>
+                                    <strong>Поставщик *</strong>
+                                </label>
+                                <input type="text" class="form-control" id="supplier" name="supplier" 
+                                       placeholder="Введите название поставщика..." required>
+                            </div>
+
+                            <!-- Таблица товаров -->
+                            <div class="mb-4">
+                                <div class="section-header">
+                                    <h5>
+                                        <i class="fas fa-boxes"></i> 
+                                        Товары в поставке
+                                    </h5>
+                                    <button type="button" class="btn-add-item" onclick="addItem()">
+                                        <i class="fas fa-plus"></i> 
+                                        Добавить товар
+                                    </button>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="modern-table" id="itemsTable">
+                                        <thead>
+                                            <tr>
+                                                <th width="35%">Товар</th>
+                                                <th width="15%">Цена закупки</th>
+                                                <th width="15%">Количество</th>
+                                                <th width="10%">Ед. изм.</th>
+                                                <th width="15%">Сумма</th>
+                                                <th width="10%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemsTableBody">
+                                            <!-- Строки будут добавляться динамически -->
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="4" class="text-end">
+                                                    <i class="fas fa-calculator me-2"></i>
+                                                    <strong>Итого:</strong>
+                                                </td>
+                                                <td colspan="2">
+                                                    <span id="totalAmount">0.00 руб.</span>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Примечания -->
+                            <div class="mb-4">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note"></i>
+                                    Примечания
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                          placeholder="Дополнительная информация о поставке..."></textarea>
+                            </div>
+
+                            <!-- Скрытое поле для данных -->
+                            <input type="hidden" name="items_data" id="itemsData">
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'products:supply_list' %}" class="btn-back">
+                                    <i class="fas fa-arrow-left"></i> 
+                                    Назад
+                                </a>
+                                <button type="submit" class="btn-submit">
+                                    <i class="fas fa-save"></i> 
+                                    Зарегистрировать поставку
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаблон для новой строки -->
+<template id="itemRowTemplate">
+    <tr class="item-row animate__animated animate__fadeIn">
+        <td>
+            <select class="form-select product-select" onchange="updateItemPrice(this)" required>
+                <option value="">Выберите товар...</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" 
+                        data-price="{{ product.price }}"
+                        data-unit="{{ product.unit }}">
+                    {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control price-input" step="0.01" min="0.01" required 
+                   onchange="calculateRowTotal(this)" placeholder="0.00">
+        </td>
+        <td>
+            <input type="number" class="form-control quantity-input" step="0.01" min="0.01" 
+                   onchange="calculateRowTotal(this)" required placeholder="0">
+        </td>
+        <td>
+            <span class="unit-label">-</span>
+        </td>
+        <td>
+            <span class="row-total">0.00 руб.</span>
+        </td>
+        <td>
+            <button type="button" class="btn-remove-item" onclick="removeItem(this)" title="Удалить">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<script>
+function addItem() {
+    const template = document.getElementById('itemRowTemplate');
+    const clone = template.content.cloneNode(true);
+    document.getElementById('itemsTableBody').appendChild(clone);
+}
+
+function removeItem(button) {
+    button.closest('tr').remove();
+    calculateTotal();
+}
+
+function updateItemPrice(select) {
+    const row = select.closest('tr');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption.value) {
+        const price = parseFloat(selectedOption.dataset.price);
+        const unit = selectedOption.dataset.unit;
+        
+        row.querySelector('.price-input').value = price.toFixed(2);
+        row.querySelector('.unit-label').textContent = unit;
+        row.querySelector('.quantity-input').value = 1;
+        
+        calculateRowTotal(row.querySelector('.price-input'));
+    } else {
+        row.querySelector('.price-input').value = '';
+        row.querySelector('.unit-label').textContent = '-';
+        row.querySelector('.quantity-input').value = '';
+        row.querySelector('.row-total').textContent = '0.00 руб.';
+        calculateTotal();
+    }
+}
+
+function calculateRowTotal(input) {
+    const row = input.closest('tr');
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    
+    const total = price * quantity;
+    row.querySelector('.row-total').textContent = total.toFixed(2) + ' руб.';
+    
+    calculateTotal();
+}
+
+function calculateTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const rowTotal = row.querySelector('.row-total').textContent;
+        const amount = parseFloat(rowTotal.replace(' руб.', '')) || 0;
+        total += amount;
+    });
+    
+    document.getElementById('totalAmount').textContent = total.toFixed(2) + ' руб.';
+}
+
+document.getElementById('supplyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const supplier = document.getElementById('supplier').value;
+    if (!supplier.trim()) {
+        alert('Укажите поставщика!');
+        return;
+    }
+    
+    const items = [];
+    let isValid = true;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const priceInput = row.querySelector('.price-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        
+        if (!productSelect.value || !priceInput.value || !quantityInput.value) {
+            isValid = false;
+            return;
+        }
+        
+        items.push({
+            product_id: productSelect.value,
+            price: priceInput.value,
+            quantity: quantityInput.value
+        });
+    });
+    
+    if (!isValid || items.length === 0) {
+        alert('Заполните все поля и добавьте хотя бы один товар!');
+        return;
+    }
+    
+    document.getElementById('itemsData').value = JSON.stringify(items);
+    this.submit();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    addItem();
+});
+</script>
+{% endblock %}

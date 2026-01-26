@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px 40px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    .page-header .btn-back {
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid white;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .page-header .btn-back:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    .page-header .btn-warning {
+        background: #ffc107;
+        color: #000;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .page-header .btn-warning:hover {
+        background: #ffb300;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+    
+    .page-header .btn-danger {
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .page-header .btn-danger:hover {
+        background: #d32f2f;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    }
+    
+    .page-header-content {
+        flex: 1;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .search-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    
+    .search-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 12px 20px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    .btn-search {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 15px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.2);
+    }
+    
+    .product-image-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 75%;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    .product-image-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .product-card:hover .product-image-wrapper img {
+        transform: scale(1.1);
+    }
+    
+    .product-image-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .product-body {
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-body h5 {
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }
+    
+    .product-sku {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #f7fafc;
+        color: #4a5568;
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .product-price {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+    }
+    
+    .product-stock {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .stock-available {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+        color: #1a5f4f;
+    }
+    
+    .stock-low {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        color: #7c2d12;
+    }
+    
+    .stock-out {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        color: white;
+    }
+    
+    .product-actions {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-product-detail {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-product-detail:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
+    
+    .btn-product-edit {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+        color: #7c2d12;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-product-edit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(246, 173, 85, 0.3);
+        color: #7c2d12;
+    }
+    
+    .product-footer {
+        padding: 15px 25px;
+        background: #f7fafc;
+        border-top: 1px solid #e2e8f0;
+        font-size: 0.85rem;
+        color: #718096;
+    }
+    
+    .empty-state {
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        color: #2d3748;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #718096;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="category-page">
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="page-header animate__animated animate__fadeInDown">
+            <a href="{% url 'products:product_list' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Назад
+            </a>
+            <div class="page-header-content">
+                <h1>
+                    <i class="fas {{ category.icon }}"></i> 
+                    {{ category.name }}
+                </h1>
+            </div>
+            {% if user.can_manage_products %}
+            <div class="d-flex gap-2">
+                <a href="{% url 'products:category_update' category.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <form method="post" action="{% url 'products:category_delete' category.id %}" style="display: inline;" onsubmit="return confirm('Вы уверены, что хотите удалить категорию {{ category.name }}? Все товары в этой категории также будут удалены!');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Удалить
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Поиск -->
+        <div class="search-card animate__animated animate__fadeInUp">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold mb-2">
+                        <i class="fas fa-search me-2"></i>Поиск по названию или артикулу
+                    </label>
+                    <input type="text" name="search" class="form-control search-input" 
+                           placeholder="Введите название товара или артикул..." 
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-search w-100">
+                        <i class="fas fa-search me-2"></i> 
+                        Найти
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Список товаров -->
+        <div class="row g-4">
+            {% for product in products %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="product-card animate__animated animate__fadeInUp">
+                    <div class="product-image-wrapper">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="product-image-placeholder">
+                                <i class="fas fa-image fa-4x text-white opacity-75"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="product-body">
+                        <h5>{{ product.name }}</h5>
+                        <span class="product-sku">
+                            <i class="fas fa-barcode"></i>
+                            {{ product.sku|default:"Без артикула" }}
+                        </span>
+                        <div class="product-price">
+                            {{ product.price }} ₽
+                            <span style="font-size: 0.6em; color: #718096;">/ {{ product.unit }}</span>
+                        </div>
+                        <div class="product-stock {% if product.quantity == 0 %}stock-out{% elif product.is_low_stock %}stock-low{% else %}stock-available{% endif %}">
+                            {% if product.quantity == 0 %}
+                                <i class="fas fa-times-circle me-1"></i> Нет в наличии
+                            {% elif product.is_low_stock %}
+                                <i class="fas fa-exclamation-triangle me-1"></i> Мало: {{ product.quantity }} {{ product.unit }}
+                            {% else %}
+                                <i class="fas fa-check-circle me-1"></i> В наличии: {{ product.quantity }} {{ product.unit }}
+                            {% endif %}
+                        </div>
+                        <div class="product-actions">
+                            <a href="{% url 'products:product_detail' product.pk %}" class="btn-product-detail">
+                                <i class="fas fa-eye"></i>
+                                Подробнее
+                            </a>
+                            {% if user.can_manage_products %}
+                            <a href="{% url 'products:product_update' product.pk %}" class="btn-product-edit">
+                                <i class="fas fa-edit"></i>
+                                Редактировать
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="product-footer">
+                        <i class="fas fa-clock me-1"></i>
+                        Добавлен: {{ product.created_at|date:'d.m.Y' }}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="empty-state animate__animated animate__fadeInUp">
+                    <i class="fas fa-box-open"></i>
+                    <h4>Товары не найдены</h4>
+                    <p>
+                        {% if search_query %}
+                        По запросу "{{ search_query }}" ничего не найдено. Попробуйте изменить параметры поиска.
+                        {% else %}
+                        В этой категории пока нет товаров
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}Категории товаров - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-list-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px 40px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 30px;
+        overflow: visible;
+        position: relative;
+        z-index: 1000;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .category-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        position: relative;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.2);
+        text-decoration: none;
+    }
+    
+    .category-icon-wrapper {
+        position: relative;
+        width: 100%;
+        padding: 60px 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .category-icon-wrapper i {
+        font-size: 5rem;
+        color: white;
+        transition: transform 0.3s ease;
+    }
+    
+    .category-card:hover .category-icon-wrapper i {
+        transform: scale(1.2) rotate(10deg);
+    }
+    
+    .category-body {
+        padding: 30px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .category-body h3 {
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+    
+    .category-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-top: auto;
+    }
+    
+    .empty-state {
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h4 {
+        color: #2d3748;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        color: #718096;
+        font-size: 1.1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .page-header .btn-create {
+            margin-top: 15px;
+            width: 100%;
+        }
+    }
+    
+    .btn-create {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .btn-create:hover {
+        background: #f7fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        color: #667eea;
+    }
+    
+    .btn-create i {
+        margin-right: 8px;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border-radius: 15px;
+        padding: 10px;
+        margin-top: 10px;
+        z-index: 10000 !important;
+        position: absolute !important;
+    }
+    
+    .dropdown {
+        z-index: 10000;
+        position: relative;
+    }
+    
+    .dropdown-item {
+        padding: 12px 20px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .dropdown-item:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: translateX(5px);
+    }
+    
+    .dropdown-item i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-list-page">
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="page-header animate__animated animate__fadeInDown d-flex justify-content-between align-items-center flex-wrap">
+            <h1>
+                <i class="fas fa-box"></i> 
+                Категории товаров
+            </h1>
+            
+            {% if user.is_manager_or_director %}
+            <div class="dropdown">
+                <button class="btn btn-create dropdown-toggle" type="button" id="createDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-plus"></i> Создать
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="createDropdown">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'products:category_create' %}">
+                            <i class="fas fa-folder-plus"></i> Новую категорию
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'products:product_create' %}">
+                            <i class="fas fa-box"></i> Новый товар
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Список категорий -->
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <a href="{% url 'products:category_products' category.id %}" class="category-card animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0|divisibleby:4|yesno:'0.1s,0.2s' }};">
+                    <div class="category-icon-wrapper">
+                        <i class="fas {{ category.icon }}"></i>
+                    </div>
+                    <div class="category-body">
+                        <h3>{{ category.name }}</h3>
+                        <span class="category-count">
+                            <i class="fas fa-box"></i>
+                            {{ category.product_count }} товар{{ category.product_count|pluralize:"ов,ов,ов" }}
+                        </span>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="empty-state animate__animated animate__fadeInUp">
+                    <i class="fas fa-folder-open"></i>
+                    <h4>Категории не найдены</h4>
+                    <p>Добавьте категории для организации товаров</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

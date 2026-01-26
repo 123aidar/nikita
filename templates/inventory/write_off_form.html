@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Новое списание - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        padding: 30px 40px;
+        color: white;
+    }
+    
+    .form-header h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-body {
+        padding: 40px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #f56565;
+        box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+        outline: none;
+    }
+    
+    textarea.form-control {
+        min-height: 100px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 40px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(113, 128, 150, 0.3);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="form-card animate__animated animate__fadeInUp">
+                    <div class="form-header">
+                        <h3>
+                            <i class="fas fa-trash"></i> 
+                            Списание товара
+                        </h3>
+                    </div>
+                    <div class="form-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-layer-group"></i>
+                                    Категория
+                                </label>
+                                <select class="form-select" id="category_filter">
+                                    <option value="">Все категории</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-box"></i>
+                                    Товар
+                                </label>
+                                {{ form.product }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-sort-numeric-down"></i>
+                                    Количество
+                                </label>
+                                {{ form.quantity }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Причина списания
+                                </label>
+                                {{ form.reason }}
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-align-left"></i>
+                                    Детали
+                                </label>
+                                {{ form.reason_detail }}
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn-submit">
+                                    <i class="fas fa-check"></i> 
+                                    Списать товар
+                                </button>
+                                <a href="{% url 'inventory:write_off_list' %}" class="btn-cancel">
+                                    <i class="fas fa-times"></i> 
+                                    Отмена
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Создаем мапу товаров с их категориями
+const productsData = {
+    {% for product in products %}
+    {{ product.id }}: {
+        name: "{{ product.name|escapejs }}",
+        category: {{ product.category.id }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+// Сохраняем все опции товаров
+const productSelect = document.getElementById('id_product');
+const allProductOptions = [];
+
+// Заполняем массив всех товаров с data-атрибутами
+for (let productId in productsData) {
+    const option = document.createElement('option');
+    option.value = productId;
+    option.textContent = productsData[productId].name;
+    option.dataset.category = productsData[productId].category;
+    allProductOptions.push(option);
+}
+
+// Инициализируем select со всеми товарами
+productSelect.innerHTML = '<option value="">---------</option>';
+allProductOptions.forEach(opt => productSelect.appendChild(opt.cloneNode(true)));
+
+// Фильтрация по категории
+document.getElementById('category_filter').addEventListener('change', function() {
+    const categoryId = this.value;
+    
+    // Очищаем список товаров
+    productSelect.innerHTML = '<option value="">---------</option>';
+    
+    // Фильтруем товары
+    const filteredProducts = categoryId === '' 
+        ? allProductOptions 
+        : allProductOptions.filter(opt => opt.dataset.category === categoryId);
+    
+    // Добавляем отфильтрованные товары
+    filteredProducts.forEach(opt => {
+        productSelect.appendChild(opt.cloneNode(true));
+    });
+});
+</script>
+{% endblock %}

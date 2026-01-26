@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали продажи #{{ sale.id }}{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card animate__animated animate__fadeIn">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-receipt"></i> Продажа #{{ sale.id }} от {{ sale.sale_date|date:"d.m.Y H:i" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Информация о продаже -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Дата:</strong> {{ sale.sale_date|date:"d.m.Y H:i" }}</p>
+                            <p><strong>Кассир:</strong> {{ sale.cashier.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Количество позиций:</strong> {{ sale.items.count }}</p>
+                            <p><strong>Общая сумма:</strong> <span class="text-success fs-4">{{ sale.total_amount|floatformat:2 }} ₽</span></p>
+                        </div>
+                    </div>
+
+                    {% if sale.notes %}
+                    <div class="alert alert-info">
+                        <strong>Примечания:</strong> {{ sale.notes }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Список товаров -->
+                    <h5 class="mb-3"><i class="fas fa-shopping-basket"></i> Товары в продаже</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Товар</th>
+                                    <th>Цена за ед.</th>
+                                    <th>Количество</th>
+                                    <th>Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale.items.all %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>{{ item.price_per_unit|floatformat:2 }} ₽</td>
+                                    <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td><strong>{{ item.get_total|floatformat:2 }} ₽</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <td colspan="3" class="text-end"><strong>Итого:</strong></td>
+                                    <td><strong class="fs-5">{{ sale.total_amount|floatformat:2 }} ₽</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'sales:sale_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Назад к списку
+                        </a>
+                        <a href="{% url 'sales:print_receipt' sale.id %}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-print"></i> Печать чека
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

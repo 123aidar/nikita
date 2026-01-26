@@ -1,0 +1,1417 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчеты и аналитика - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reports-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px 40px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    
+    .chart-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 25px 30px;
+        color: white;
+    }
+    
+    .chart-header h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .chart-body {
+        padding: 30px;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin-top: 20px;
+    }
+    
+    .period-selector {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .period-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .period-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .period-btn.active {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    .stat-card-modern {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.2);
+    }
+    
+    .stat-card-header-sales {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        padding: 20px;
+        color: white;
+    }
+    
+    .stat-card-header-products {
+        background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%);
+        padding: 20px;
+        color: white;
+    }
+    
+    .stat-card-header-writeoffs {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        padding: 20px;
+        color: white;
+    }
+    
+    .stat-card-header h5 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card-body {
+        padding: 25px;
+    }
+    
+    .stat-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stat-item:last-child {
+        border-bottom: none;
+    }
+    
+    .stat-label {
+        color: #718096;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .top-sellers-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .seller-item {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .seller-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .seller-rank {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-right: 20px;
+        flex-shrink: 0;
+    }
+    
+    .seller-rank.gold {
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        color: #333;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .seller-rank.silver {
+        background: linear-gradient(135deg, #c0c0c0 0%, #d3d3d3 100%);
+        color: #333;
+        box-shadow: 0 4px 15px rgba(192, 192, 192, 0.4);
+    }
+    
+    .seller-rank.bronze {
+        background: linear-gradient(135deg, #cd7f32 0%, #e6a45c 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(205, 127, 50, 0.4);
+    }
+    
+    .seller-info {
+        flex: 1;
+    }
+    
+    .seller-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    
+    .seller-stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .seller-stat {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    .seller-stat i {
+        color: #667eea;
+    }
+    
+    .seller-stat strong {
+        color: #2d3748;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="page-header animate__animated animate__fadeInDown">
+            <h1>
+                <i class="fas fa-chart-line"></i> 
+                Отчеты и аналитика
+            </h1>
+        </div>
+
+        <!-- Статистика (плитки наверху) -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card-modern animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+                    <div class="stat-card-header-sales">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cash-register"></i> 
+                                Продажи
+                            </h5>
+                            <button class="btn btn-sm btn-light" onclick="printSalesReport()">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <div class="stat-item">
+                            <div class="stat-label">Сегодня</div>
+                            <div class="stat-value" id="salesToday">0 ₽</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">За неделю</div>
+                            <div class="stat-value" id="salesWeek">0 ₽</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">За месяц</div>
+                            <div class="stat-value" id="salesMonth">0 ₽</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="stat-card-modern animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                    <div class="stat-card-header-products">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-box"></i> 
+                                Товары
+                            </h5>
+                            <button class="btn btn-sm btn-light" onclick="printProductsReport()">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <div class="stat-item">
+                            <div class="stat-label">Мало на складе</div>
+                            <div class="stat-value" id="lowStock">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Нет в наличии</div>
+                            <div class="stat-value" id="outOfStock">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Просрочено</div>
+                            <div class="stat-value" id="expired">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="stat-card-modern animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+                    <div class="stat-card-header-writeoffs">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-trash"></i> 
+                                Списания
+                            </h5>
+                            <button class="btn btn-sm btn-light" onclick="printWriteOffsReport()">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="stat-card-body">
+                        <div class="stat-item">
+                            <div class="stat-label">За неделю</div>
+                            <div class="stat-value" id="writeOffsWeek">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">За месяц</div>
+                            <div class="stat-value" id="writeOffsMonth">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">За год</div>
+                            <div class="stat-value" id="writeOffsYear">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- График прибыли -->
+        <div class="chart-card animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+            <div class="chart-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-dollar-sign"></i> 
+                        График прибыли
+                    </h4>
+                    <button class="btn btn-sm btn-light" onclick="printProfitChart()">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="period-selector">
+                    <button class="period-btn active" id="profitWeekBtn" onclick="updateProfitChart('week')">
+                        <i class="fas fa-calendar-week"></i> Неделя
+                    </button>
+                    <button class="period-btn" id="profitMonthBtn" onclick="updateProfitChart('month')">
+                        <i class="fas fa-calendar-alt"></i> Месяц
+                    </button>
+                    <button class="period-btn" id="profitYearBtn" onclick="updateProfitChart('year')">
+                        <i class="fas fa-calendar"></i> Год
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- График самых продаваемых товаров -->
+        <div class="chart-card animate__animated animate__fadeInUp" style="animation-delay: 0.5s;">
+            <div class="chart-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-fire"></i> 
+                        Самые продаваемые товары
+                    </h4>
+                    <button class="btn btn-sm btn-light" onclick="printTopProductsChart()">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="period-selector">
+                    <button class="period-btn active" id="topWeekBtn" onclick="updateTopProductsChart('week')">
+                        <i class="fas fa-calendar-week"></i> Неделя
+                    </button>
+                    <button class="period-btn" id="topMonthBtn" onclick="updateTopProductsChart('month')">
+                        <i class="fas fa-calendar-alt"></i> Месяц
+                    </button>
+                    <button class="period-btn" id="topYearBtn" onclick="updateTopProductsChart('year')">
+                        <i class="fas fa-calendar"></i> Год
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Топ продавцов за неделю -->
+    <div class="col-md-8 col-lg-6 mx-auto mb-4">
+        <div class="chart-card animate__animated animate__fadeInUp" style="animation-delay: 0.3s;">
+            <div class="chart-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-trophy"></i> 
+                    Топ продавцов за неделю
+                </h4>
+            </div>
+            <div class="chart-body">
+                <div id="topSellersContainer" class="top-sellers-list">
+                    <!-- Данные будут загружены через JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let profitChart = null;
+    let topProductsChart = null;
+    let currentProfitPeriod = 'week';
+    let currentTopProductsPeriod = 'week';
+    let statsData = {};
+    
+    // Initialize charts
+    function initProfitChart() {
+        const ctx = document.getElementById('profitChart').getContext('2d');
+        profitChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Прибыль (₽)',
+                    data: [],
+                    borderColor: 'rgb(102, 126, 234)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Прибыль: ' + context.parsed.y.toFixed(2) + ' ₽';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + ' ₽';
+                            },
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function initTopProductsChart() {
+        const ctx = document.getElementById('topProductsChart').getContext('2d');
+        topProductsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Сумма продаж (₽)',
+                    data: [],
+                    backgroundColor: 'rgba(118, 75, 162, 0.7)',
+                    borderColor: 'rgb(118, 75, 162)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Сумма: ' + context.parsed.y.toFixed(2) + ' ₽';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + ' ₽';
+                            },
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function updateProfitChart(period) {
+        currentProfitPeriod = period;
+        
+        // Update button states
+        document.querySelectorAll('[id^="profit"]').forEach(btn => btn.classList.remove('active'));
+        const btn = document.getElementById('profit' + period.charAt(0).toUpperCase() + period.slice(1) + 'Btn');
+        if (btn) btn.classList.add('active');
+        
+        console.log('Loading profit chart for period:', period);
+        
+        fetch(`{% url 'reports:profit_chart_data' %}?period=${period}`)
+            .then(response => {
+                console.log('Profit chart response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Profit chart data received:', data);
+                if (profitChart && data.labels && data.data) {
+                    profitChart.data.labels = data.labels;
+                    profitChart.data.datasets[0].data = data.data;
+                    profitChart.update();
+                    console.log('Profit chart updated successfully');
+                } else {
+                    console.error('Invalid profit chart data or chart not initialized');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading profit chart:', error);
+                alert('Ошибка загрузки графика прибыли: ' + error.message);
+            });
+    }
+    
+    function updateTopProductsChart(period) {
+        currentTopProductsPeriod = period;
+        
+        // Update button states
+        document.querySelectorAll('[id^="top"]').forEach(btn => btn.classList.remove('active'));
+        const btn = document.getElementById('top' + period.charAt(0).toUpperCase() + period.slice(1) + 'Btn');
+        if (btn) btn.classList.add('active');
+        
+        console.log('Loading top products chart for period:', period);
+        
+        fetch(`{% url 'reports:top_products_data' %}?period=${period}`)
+            .then(response => {
+                console.log('Top products chart response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Top products chart data received:', data);
+                if (topProductsChart && data.labels && data.amounts) {
+                    topProductsChart.data.labels = data.labels;
+                    topProductsChart.data.datasets[0].data = data.amounts;
+                    topProductsChart.update();
+                    console.log('Top products chart updated successfully');
+                } else {
+                    console.error('Invalid top products data or chart not initialized');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading top products chart:', error);
+                alert('Ошибка загрузки графика топ товаров: ' + error.message);
+            });
+    }
+    
+    function loadStatistics() {
+        console.log('Loading statistics...');
+        fetch('{% url "reports:statistics_data" %}')
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Statistics data received:', data);
+                statsData = data;
+                
+                // Проверяем наличие элементов перед обновлением
+                const salesToday = document.getElementById('salesToday');
+                const salesWeek = document.getElementById('salesWeek');
+                const salesMonth = document.getElementById('salesMonth');
+                const lowStock = document.getElementById('lowStock');
+                const outOfStock = document.getElementById('outOfStock');
+                const expired = document.getElementById('expired');
+                const writeOffsWeek = document.getElementById('writeOffsWeek');
+                
+                if (salesToday) salesToday.textContent = data.sales.today.toFixed(2) + ' ₽';
+                if (salesWeek) salesWeek.textContent = data.sales.week.toFixed(2) + ' ₽';
+                if (salesMonth) salesMonth.textContent = data.sales.month.toFixed(2) + ' ₽';
+                
+                if (lowStock) lowStock.textContent = data.products.low_stock;
+                if (outOfStock) outOfStock.textContent = data.products.out_of_stock;
+                if (expired) expired.textContent = data.products.expired;
+                
+                if (writeOffsWeek) writeOffsWeek.textContent = data.write_offs.week;
+                const writeOffsMonth = document.getElementById('writeOffsMonth');
+                const writeOffsYear = document.getElementById('writeOffsYear');
+                if (writeOffsMonth) writeOffsMonth.textContent = data.write_offs.month;
+                if (writeOffsYear) writeOffsYear.textContent = data.write_offs.year;
+                
+                console.log('Statistics updated successfully');
+            })
+            .catch(error => {
+                console.error('Error loading statistics:', error);
+                alert('Ошибка загрузки статистики: ' + error.message);
+            });
+    }
+    
+    // Print functions
+    function printSalesReport() {
+        console.log('Fetching detailed sales data...');
+        fetch('{% url "reports:detailed_sales_data" %}?period=month')
+            .then(response => {
+                console.log('Sales response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Sales data received:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (!data.sales) {
+                    throw new Error('No sales data in response');
+                }
+                
+                const printWindow = window.open('', '_blank');
+                
+                let itemsHtml = '';
+                data.sales.forEach((sale, index) => {
+                    let saleItemsHtml = '';
+                    sale.items.forEach(item => {
+                        saleItemsHtml += `
+                            <tr>
+                                <td>${item.product}</td>
+                                <td class="text-center">${item.quantity}</td>
+                                <td class="text-right">${item.price.toFixed(2)} ₽</td>
+                                <td class="text-right">${item.total.toFixed(2)} ₽</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    itemsHtml += `
+                        <div class="sale-block">
+                            <div class="sale-header">
+                                <div><strong>Продажа №${index + 1}</strong></div>
+                                <div>Дата: ${sale.date}</div>
+                                <div>Продавец: ${sale.sold_by}</div>
+                            </div>
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Товар</th>
+                                        <th class="text-center">Количество</th>
+                                        <th class="text-right">Цена</th>
+                                        <th class="text-right">Сумма</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${saleItemsHtml}
+                                </tbody>
+                            </table>
+                            <div class="sale-total">Итого по продаже: <strong>${sale.total.toFixed(2)} ₽</strong></div>
+                        </div>
+                    `;
+                });
+                
+                const totalSales = data.sales.reduce((sum, sale) => sum + sale.total, 0);
+                
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Детальный отчет по продажам</title>
+                        <meta charset="utf-8">
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                padding: 40px;
+                                line-height: 1.6;
+                                color: #2d3748;
+                            }
+                            .header {
+                                text-align: center;
+                                border-bottom: 3px solid #48bb78;
+                                padding-bottom: 20px;
+                                margin-bottom: 30px;
+                            }
+                            .header h1 { 
+                                color: #48bb78; 
+                                margin: 0;
+                                font-size: 28px;
+                            }
+                            .header .subtitle {
+                                color: #718096;
+                                margin-top: 10px;
+                            }
+                            .sale-block {
+                                margin-bottom: 30px;
+                                border: 1px solid #e2e8f0;
+                                border-radius: 8px;
+                                overflow: hidden;
+                                page-break-inside: avoid;
+                            }
+                            .sale-header {
+                                background: #f7fafc;
+                                padding: 15px 20px;
+                                display: flex;
+                                justify-content: space-between;
+                                border-bottom: 2px solid #e2e8f0;
+                            }
+                            .items-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            .items-table th, .items-table td {
+                                padding: 12px 15px;
+                                text-align: left;
+                                border-bottom: 1px solid #e2e8f0;
+                            }
+                            .items-table th {
+                                background: #edf2f7;
+                                font-weight: bold;
+                                color: #2d3748;
+                            }
+                            .text-center { text-align: center; }
+                            .text-right { text-align: right; }
+                            .sale-total {
+                                padding: 15px 20px;
+                                text-align: right;
+                                background: #f7fafc;
+                                font-size: 16px;
+                            }
+                            .summary {
+                                margin-top: 30px;
+                                padding: 20px;
+                                background: #f0fff4;
+                                border-left: 4px solid #48bb78;
+                                border-radius: 4px;
+                            }
+                            .summary h3 {
+                                margin-top: 0;
+                                color: #48bb78;
+                            }
+                            .footer {
+                                margin-top: 40px;
+                                text-align: center;
+                                color: #a0aec0;
+                                font-size: 12px;
+                                border-top: 1px solid #e2e8f0;
+                                padding-top: 20px;
+                            }
+                            @media print {
+                                body { padding: 20px; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>ДЕТАЛЬНЫЙ ОТЧЕТ ПО ПРОДАЖАМ</h1>
+                            <div class="subtitle">За последний месяц</div>
+                            <div class="subtitle">Дата формирования: ${new Date().toLocaleString('ru-RU')}</div>
+                        </div>
+                        
+                        ${itemsHtml || '<p style="text-align: center; color: #a0aec0;">Продажи отсутствуют</p>'}
+                        
+                        <div class="summary">
+                            <h3>ИТОГОВАЯ ИНФОРМАЦИЯ</h3>
+                            <p><strong>Всего продаж:</strong> ${data.sales.length} шт.</p>
+                            <p><strong>Общая сумма:</strong> ${totalSales.toFixed(2)} ₽</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Система управления продуктовым магазином</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 500);
+            })
+            .catch(error => {
+                console.error('Error fetching sales data:', error);
+                alert('Ошибка загрузки данных для отчета по продажам: ' + error.message);
+            });
+    }
+    
+    function printProductsReport() {
+        console.log('Fetching detailed products data...');
+        fetch('{% url "reports:detailed_products_data" %}')
+            .then(response => {
+                console.log('Products response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Products data received:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                const printWindow = window.open('', '_blank');
+                
+                let lowStockHtml = '';
+                data.low_stock.forEach((product, index) => {
+                    lowStockHtml += `
+                        <div class="product-item">
+                            <div class="product-number">${index + 1}</div>
+                            <div class="product-info">
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-details">
+                                    <span><strong>Категория:</strong> ${product.category}</span>
+                                    <span><strong>Остаток:</strong> ${product.quantity} ${product.unit}</span>
+                                    <span><strong>Цена:</strong> ${product.price.toFixed(2)} ₽</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                let outOfStockHtml = '';
+                data.out_of_stock.forEach((product, index) => {
+                    outOfStockHtml += `
+                        <div class="product-item">
+                            <div class="product-number">${index + 1}</div>
+                            <div class="product-info">
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-details">
+                                    <span><strong>Категория:</strong> ${product.category}</span>
+                                    <span><strong>Цена:</strong> ${product.price.toFixed(2)} ₽</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Детальный отчет по товарам</title>
+                        <meta charset="utf-8">
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                padding: 40px;
+                                line-height: 1.6;
+                                color: #2d3748;
+                            }
+                            .header {
+                                text-align: center;
+                                border-bottom: 3px solid #f6ad55;
+                                padding-bottom: 20px;
+                                margin-bottom: 30px;
+                            }
+                            .header h1 { 
+                                color: #f6ad55; 
+                                margin: 0;
+                                font-size: 28px;
+                            }
+                            .header .subtitle {
+                                color: #718096;
+                                margin-top: 10px;
+                            }
+                            .section {
+                                margin-bottom: 40px;
+                            }
+                            .section-title {
+                                background: #f6ad55;
+                                color: white;
+                                padding: 15px 20px;
+                                font-size: 20px;
+                                font-weight: bold;
+                                margin-bottom: 20px;
+                                border-radius: 8px;
+                            }
+                            .product-item {
+                                display: flex;
+                                padding: 15px;
+                                border: 1px solid #e2e8f0;
+                                border-radius: 8px;
+                                margin-bottom: 15px;
+                                background: white;
+                                page-break-inside: avoid;
+                            }
+                            .product-number {
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #f6ad55;
+                                margin-right: 20px;
+                                min-width: 40px;
+                            }
+                            .product-info {
+                                flex: 1;
+                            }
+                            .product-name {
+                                font-size: 18px;
+                                font-weight: bold;
+                                color: #2d3748;
+                                margin-bottom: 8px;
+                            }
+                            .product-details {
+                                color: #718096;
+                                font-size: 14px;
+                            }
+                            .product-details span {
+                                display: inline-block;
+                                margin-right: 20px;
+                            }
+                            .summary {
+                                margin-top: 30px;
+                                padding: 20px;
+                                background: #fffaf0;
+                                border-left: 4px solid #f6ad55;
+                                border-radius: 4px;
+                            }
+                            .summary h3 {
+                                margin-top: 0;
+                                color: #f6ad55;
+                            }
+                            .footer {
+                                margin-top: 40px;
+                                text-align: center;
+                                color: #a0aec0;
+                                font-size: 12px;
+                                border-top: 1px solid #e2e8f0;
+                                padding-top: 20px;
+                            }
+                            .empty-message {
+                                text-align: center;
+                                color: #a0aec0;
+                                padding: 30px;
+                                font-style: italic;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>ДЕТАЛЬНЫЙ ОТЧЕТ ПО ТОВАРАМ</h1>
+                            <div class="subtitle">Статус складских остатков</div>
+                            <div class="subtitle">Дата формирования: ${new Date().toLocaleString('ru-RU')}</div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Товары с низким остатком (меньше 10 единиц)</div>
+                            ${lowStockHtml || '<div class="empty-message">Товаров с низким остатком нет</div>'}
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Товары отсутствующие на складе</div>
+                            ${outOfStockHtml || '<div class="empty-message">Все товары в наличии</div>'}
+                        </div>
+                        
+                        <div class="summary">
+                            <h3>ИТОГОВАЯ ИНФОРМАЦИЯ</h3>
+                            <p><strong>Товаров с низким остатком:</strong> ${data.low_stock.length} шт.</p>
+                            <p><strong>Товаров нет в наличии:</strong> ${data.out_of_stock.length} шт.</p>
+                            <p><strong>Требует внимания:</strong> ${data.low_stock.length + data.out_of_stock.length} товаров</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Система управления продуктовым магазином</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 500);
+            })
+            .catch(error => {
+                console.error('Error fetching products data:', error);
+                alert('Ошибка загрузки данных для отчета по товарам: ' + error.message);
+            });
+    }
+    
+    function printWriteOffsReport() {
+        console.log('Fetching detailed write-offs data...');
+        fetch('{% url "reports:detailed_writeoffs_data" %}?period=month')
+            .then(response => {
+                console.log('Write-offs response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('HTTP error ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Write-offs data received:', data);
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                if (!data.writeoffs) {
+                    throw new Error('No writeoffs data in response');
+                }
+                
+                const printWindow = window.open('', '_blank');
+                
+                let writeoffsHtml = '';
+                data.writeoffs.forEach((wo, index) => {
+                    writeoffsHtml += `
+                        <div class="writeoff-item">
+                            <div class="writeoff-number">${index + 1}</div>
+                            <div class="writeoff-content">
+                                <div class="writeoff-header">
+                                    <div class="writeoff-product">${wo.product}</div>
+                                    <div class="writeoff-date">${wo.date}</div>
+                                </div>
+                                <div class="writeoff-details">
+                                    <div class="detail-row">
+                                        <span class="detail-label">Категория:</span>
+                                        <span class="detail-value">${wo.category}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Количество списано:</span>
+                                        <span class="detail-value">${wo.quantity} ${wo.unit}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Причина списания:</span>
+                                        <span class="detail-value reason">${wo.reason}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label">Ответственный:</span>
+                                        <span class="detail-value">${wo.written_off_by}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const totalQuantity = data.writeoffs.reduce((sum, wo) => sum + wo.quantity, 0);
+                
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Детальный отчет по списаниям</title>
+                        <meta charset="utf-8">
+                        <style>
+                            body { 
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                                padding: 40px;
+                                line-height: 1.6;
+                                color: #2d3748;
+                            }
+                            .header {
+                                text-align: center;
+                                border-bottom: 3px solid #f56565;
+                                padding-bottom: 20px;
+                                margin-bottom: 30px;
+                            }
+                            .header h1 { 
+                                color: #f56565; 
+                                margin: 0;
+                                font-size: 28px;
+                            }
+                            .header .subtitle {
+                                color: #718096;
+                                margin-top: 10px;
+                            }
+                            .writeoff-item {
+                                display: flex;
+                                padding: 20px;
+                                border: 2px solid #e2e8f0;
+                                border-radius: 10px;
+                                margin-bottom: 20px;
+                                background: white;
+                                page-break-inside: avoid;
+                            }
+                            .writeoff-number {
+                                font-size: 32px;
+                                font-weight: bold;
+                                color: #f56565;
+                                margin-right: 25px;
+                                min-width: 50px;
+                                text-align: center;
+                            }
+                            .writeoff-content {
+                                flex: 1;
+                            }
+                            .writeoff-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                                margin-bottom: 15px;
+                                padding-bottom: 10px;
+                                border-bottom: 2px solid #fed7d7;
+                            }
+                            .writeoff-product {
+                                font-size: 20px;
+                                font-weight: bold;
+                                color: #2d3748;
+                            }
+                            .writeoff-date {
+                                color: #718096;
+                                font-size: 14px;
+                            }
+                            .writeoff-details {
+                                background: #fffaf0;
+                                padding: 15px;
+                                border-radius: 8px;
+                            }
+                            .detail-row {
+                                display: flex;
+                                padding: 8px 0;
+                                border-bottom: 1px solid #e2e8f0;
+                            }
+                            .detail-row:last-child {
+                                border-bottom: none;
+                            }
+                            .detail-label {
+                                font-weight: bold;
+                                color: #4a5568;
+                                min-width: 200px;
+                            }
+                            .detail-value {
+                                color: #2d3748;
+                                flex: 1;
+                            }
+                            .detail-value.reason {
+                                font-style: italic;
+                                color: #f56565;
+                            }
+                            .summary {
+                                margin-top: 30px;
+                                padding: 20px;
+                                background: #fff5f5;
+                                border-left: 4px solid #f56565;
+                                border-radius: 4px;
+                            }
+                            .summary h3 {
+                                margin-top: 0;
+                                color: #f56565;
+                            }
+                            .footer {
+                                margin-top: 40px;
+                                text-align: center;
+                                color: #a0aec0;
+                                font-size: 12px;
+                                border-top: 1px solid #e2e8f0;
+                                padding-top: 20px;
+                            }
+                            .empty-message {
+                                text-align: center;
+                                color: #a0aec0;
+                                padding: 50px;
+                                font-style: italic;
+                                font-size: 18px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>ДЕТАЛЬНЫЙ ОТЧЕТ ПО СПИСАНИЯМ</h1>
+                            <div class="subtitle">За последний месяц</div>
+                            <div class="subtitle">Дата формирования: ${new Date().toLocaleString('ru-RU')}</div>
+                        </div>
+                        
+                        ${writeoffsHtml || '<div class="empty-message">Списания отсутствуют</div>'}
+                        
+                        <div class="summary">
+                            <h3>ИТОГОВАЯ ИНФОРМАЦИЯ</h3>
+                            <p><strong>Всего списаний:</strong> ${data.writeoffs.length} записей</p>
+                            <p><strong>Уникальных товаров:</strong> ${new Set(data.writeoffs.map(w => w.product)).size} шт.</p>
+                            <p><strong>Категорий товаров:</strong> ${new Set(data.writeoffs.map(w => w.category)).size}</p>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Система управления продуктовым магазином</p>
+                            <p>Все данные являются конфиденциальными и предназначены только для внутреннего использования</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                setTimeout(() => printWindow.print(), 500);
+            })
+            .catch(error => {
+                console.error('Error fetching write-offs data:', error);
+                alert('Ошибка загрузки данных для отчета по списаниям: ' + error.message);
+            });
+    }
+    
+    function printProfitChart() {
+        const printWindow = window.open('', '_blank');
+        const chartImage = profitChart.toBase64Image();
+        const periodText = currentProfitPeriod === 'week' ? 'неделю' : currentProfitPeriod === 'month' ? 'месяц' : 'год';
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>График прибыли</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; }
+                    h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+                    .chart { margin: 30px 0; text-align: center; }
+                    .chart img { max-width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; }
+                    .info { margin: 20px 0; padding: 15px; background: #f7fafc; }
+                    .date { text-align: right; color: #a0aec0; margin-top: 30px; }
+                </style>
+            </head>
+            <body>
+                <h1><i>💰</i> График прибыли</h1>
+                <div class="info">Период: За ${periodText}</div>
+                <div class="chart">
+                    <img src="${chartImage}" />
+                </div>
+                <div class="date">Дата формирования: ${new Date().toLocaleString('ru-RU')}</div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    }
+    
+    function printTopProductsChart() {
+        const printWindow = window.open('', '_blank');
+        const chartImage = topProductsChart.toBase64Image();
+        const periodText = currentTopProductsPeriod === 'week' ? 'неделю' : currentTopProductsPeriod === 'month' ? 'месяц' : 'год';
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Самые продаваемые товары</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; }
+                    h1 { color: #764ba2; border-bottom: 3px solid #764ba2; padding-bottom: 10px; }
+                    .chart { margin: 30px 0; text-align: center; }
+                    .chart img { max-width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; }
+                    .info { margin: 20px 0; padding: 15px; background: #f7fafc; }
+                    .date { text-align: right; color: #a0aec0; margin-top: 30px; }
+                </style>
+            </head>
+            <body>
+                <h1><i>🔥</i> Самые продаваемые товары</h1>
+                <div class="info">Период: За ${periodText}</div>
+                <div class="chart">
+                    <img src="${chartImage}" />
+                </div>
+                <div class="date">Дата формирования: ${new Date().toLocaleString('ru-RU')}</div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    }
+    
+    // Load Top Sellers
+    function loadTopSellers() {
+        fetch('{% url "reports:top_sellers_data" %}')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('topSellersContainer');
+                if (data.sellers && data.sellers.length > 0) {
+                    container.innerHTML = data.sellers.map((seller, index) => {
+                        let rankClass = '';
+                        if (index === 0) rankClass = 'gold';
+                        else if (index === 1) rankClass = 'silver';
+                        else if (index === 2) rankClass = 'bronze';
+                        
+                        return `
+                            <div class="seller-item animate__animated animate__fadeInUp" style="animation-delay: ${index * 0.1}s;">
+                                <div class="seller-rank ${rankClass}">
+                                    ${index + 1}
+                                </div>
+                                <div class="seller-info">
+                                    <div class="seller-name">${seller.name}</div>
+                                    <div class="seller-stats">
+                                        <div class="seller-stat">
+                                            <i class="fas fa-ruble-sign"></i>
+                                            <span>Выручка: <strong>${seller.total_sales.toFixed(2)} ₽</strong></span>
+                                        </div>
+                                        <div class="seller-stat">
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <span>Продаж: <strong>${seller.sales_count}</strong></span>
+                                        </div>
+                                        <div class="seller-stat">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span>Средний чек: <strong>${seller.average_sale.toFixed(2)} ₽</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <p>Нет данных о продажах за последнюю неделю</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading top sellers:', error);
+                document.getElementById('topSellersContainer').innerHTML = `
+                    <div class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <p>Ошибка загрузки данных</p>
+                    </div>
+                `;
+            });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded - initializing reports dashboard...');
+        
+        try {
+            console.log('Initializing charts...');
+            initProfitChart();
+            initTopProductsChart();
+            console.log('Charts initialized successfully');
+            
+            console.log('Loading initial data...');
+            updateProfitChart('week');
+            updateTopProductsChart('week');
+            loadStatistics();
+            loadTopSellers();
+            
+            // Auto-refresh statistics every 30 seconds
+            setInterval(() => {
+                console.log('Auto-refreshing statistics...');
+                loadStatistics();
+                loadTopSellers();
+            }, 30000);
+            
+            console.log('Dashboard initialization complete');
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            alert('Ошибка инициализации панели отчетов: ' + error.message);
+        }
+    });
+</script>
+{% endblock %}

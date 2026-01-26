@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Отчет инвентаризации - {{ inventory_date|date:"d.m.Y" }}</title>
+    <style>
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        
+        .report-header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .report-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        
+        .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .report-info div {
+            flex: 1;
+        }
+        
+        .report-info strong {
+            font-weight: bold;
+        }
+        
+        .category-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .category-header {
+            background: #4a90e2;
+            color: white;
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .difference-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .difference-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .difference-zero {
+            color: #6c757d;
+        }
+        
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .summary h3 {
+            margin-top: 0;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+            padding-top: 15px;
+            border-top: 2px solid #333;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .print-button:hover {
+            background: #357abd;
+        }
+        
+        .signature-section {
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+        
+        .signature-line {
+            margin-top: 40px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        <i class="fas fa-print"></i> Печать отчета
+    </button>
+
+    <div class="report-header">
+        <h1>ОТЧЕТ ПО ИНВЕНТАРИЗАЦИИ</h1>
+        <p>№ {{ session_id|slice:":8"|upper }}</p>
+    </div>
+
+    <div class="report-info">
+        <div>
+            <strong>Дата проведения:</strong><br>
+            {{ inventory_date|date:"d.m.Y H:i" }}
+        </div>
+        <div>
+            <strong>Проводил:</strong><br>
+            {{ conducted_by.get_full_name }}
+        </div>
+        <div>
+            <strong>Всего товаров:</strong><br>
+            {{ total_items }} шт.
+        </div>
+    </div>
+
+    {% for category, items in categories_data.items %}
+    <div class="category-section">
+        <div class="category-header">{{ category }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Товар</th>
+                    <th style="width: 15%;" class="text-center">Ед. изм.</th>
+                    <th style="width: 15%;" class="text-right">Ожидалось</th>
+                    <th style="width: 15%;" class="text-right">Фактически</th>
+                    <th style="width: 15%;" class="text-right">Разница</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.product }}</td>
+                    <td class="text-center">{{ item.unit }}</td>
+                    <td class="text-right">{{ item.expected }}</td>
+                    <td class="text-right">{{ item.actual }}</td>
+                    <td class="text-right
+                        {% if item.difference > 0 %}
+                            difference-positive
+                        {% elif item.difference < 0 %}
+                            difference-negative
+                        {% else %}
+                            difference-zero
+                        {% endif %}">
+                        {% if item.difference > 0 %}+{% endif %}{{ item.difference }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+
+    <div class="summary">
+        <h3>ИТОГОВЫЕ ПОКАЗАТЕЛИ</h3>
+        <div class="summary-row">
+            <span>Количество категорий:</span>
+            <span>{{ categories_data|length }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Всего товаров проверено:</span>
+            <span>{{ total_items }} шт.</span>
+        </div>
+        <div class="summary-row">
+            <span>Ожидаемое количество:</span>
+            <span>{{ total_expected }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Фактическое количество:</span>
+            <span>{{ total_actual }}</span>
+        </div>
+        <div class="summary-row
+            {% if total_difference > 0 %}
+                difference-positive
+            {% elif total_difference < 0 %}
+                difference-negative
+            {% else %}
+                difference-zero
+            {% endif %}">
+            <span>Общая разница:</span>
+            <span>{% if total_difference > 0 %}+{% endif %}{{ total_difference }}</span>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-line">
+            <div>
+                <strong>Ответственное лицо:</strong>
+                <br><br>
+                _______________________
+                <br>
+                <small>{{ conducted_by.get_full_name }}</small>
+            </div>
+            <div>
+                <strong>Дата:</strong>
+                <br><br>
+                _______________________
+                <br>
+                <small>{{ inventory_date|date:"d.m.Y" }}</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

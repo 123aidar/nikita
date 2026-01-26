@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чек №{{ sale.id }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .receipt {
+            width: 300px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border: 2px dashed #333;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-header h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .receipt-header p {
+            font-size: 11px;
+            margin: 2px 0;
+            color: #666;
+        }
+        
+        .receipt-info {
+            font-size: 11px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #999;
+        }
+        
+        .receipt-info p {
+            margin: 3px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .receipt-info .label {
+            font-weight: bold;
+        }
+        
+        .receipt-items {
+            margin-bottom: 15px;
+        }
+        
+        .item {
+            margin-bottom: 10px;
+            font-size: 11px;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 5px;
+        }
+        
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .item-details {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+        }
+        
+        .item-quantity {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .receipt-total {
+            border-top: 2px solid #333;
+            border-bottom: 2px solid #333;
+            padding: 10px 0;
+            margin: 15px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .receipt-total div {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .total-amount {
+            font-size: 18px;
+        }
+        
+        .receipt-footer {
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px dashed #333;
+        }
+        
+        .receipt-footer p {
+            margin: 3px 0;
+        }
+        
+        .barcode {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .barcode svg {
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        
+        .print-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .print-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .print-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .receipt {
+                width: 80mm;
+                box-shadow: none;
+                border: none;
+            }
+            
+            .print-button-container {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="receipt">
+            <div class="receipt-header">
+                <h1>ПРОДУКТОВЫЙ МАГАЗИН "НА ПРОСТОРНОЙ"</h1>
+                <p>ИНН: 160502056287.</p>
+                <p>Адрес: Республика Татарстан, пгт. Алексеевское</p>
+                <p>Контактный номер: +7(904)717-16-26</p>
+                <p>Почтовый адрес: panishev1501@gmail.com</p>
+            </div>
+            
+            <div class="receipt-info">
+                <p>
+                    <span class="label">ЧЕК №:</span>
+                    <span>{{ sale.id }}</span>
+                </p>
+                <p>
+                    <span class="label">ДАТА:</span>
+                    <span>{{ sale.sale_date|date:"d.m.Y H:i" }}</span>
+                </p>
+                <p>
+                    <span class="label">КАССИР:</span>
+                    <span>{{ sale.cashier.get_full_name }}</span>
+                </p>
+            </div>
+            
+            <div class="receipt-items">
+                {% for item in sale.items.all %}
+                <div class="item">
+                    <div class="item-name">{{ item.product.name }}</div>
+                    <div class="item-details">
+                        <div class="item-quantity">
+                            <span>{{ item.quantity }} {{ item.product.unit }}</span>
+                            <span>x</span>
+                            <span>{{ item.price_per_unit|floatformat:2 }} ₽</span>
+                        </div>
+                        <span>{{ item.get_total|floatformat:2 }} ₽</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="receipt-total">
+                <div>
+                    <span>КОЛИЧЕСТВО ПОЗИЦИЙ:</span>
+                    <span>{{ sale.items.count }}</span>
+                </div>
+                <div style="font-size: 11px; padding: 8px 0; border-top: 1px dashed #ccc; margin-top: 8px;">
+                    <span>СУММА БЕЗ НДС:</span>
+                    <span>{% widthratio sale.total_amount 1.2 1 %} ₽</span>
+                </div>
+                <div style="font-size: 11px;">
+                    <span>НДС (20%):</span>
+                    <span>{% widthratio sale.total_amount 6 1 %} ₽</span>
+                </div>
+                <div class="total-amount" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #666;">
+                    <span>ИТОГО С НДС:</span>
+                    <span>{{ sale.total_amount|floatformat:2 }} ₽</span>
+                </div>
+            </div>
+            
+            <div class="barcode">
+                <svg width="180" height="50" style="display: block; margin: 0 auto;">
+                    <!-- Генерируем штрих-код -->
+                    {% with sale.id|stringformat:"05d" as barcode_number %}
+                    <rect x="15" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="18" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="22" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="27" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="30" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="34" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="40" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="43" y="0" width="4" height="35" fill="#000"/>
+                    <rect x="50" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="54" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="58" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="64" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="67" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="73" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="77" y="0" width="4" height="35" fill="#000"/>
+                    <rect x="84" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="87" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="93" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="97" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="101" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="107" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="111" y="0" width="4" height="35" fill="#000"/>
+                    <rect x="118" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="122" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="126" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="132" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="136" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="140" y="0" width="3" height="35" fill="#000"/>
+                    <rect x="146" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="150" y="0" width="4" height="35" fill="#000"/>
+                    <rect x="157" y="0" width="1.5" height="35" fill="#000"/>
+                    <rect x="161" y="0" width="3" height="35" fill="#000"/>
+                    <text x="90" y="46" font-family="Courier New" font-size="9" text-anchor="middle" fill="#000">{{ barcode_number }}</text>
+                    {% endwith %}
+                </svg>
+            </div>
+            
+            <div class="receipt-footer">
+                <p>СПАСИБО ЗА ПОКУПКУ!</p>
+                <p>Приходите к нам еще!</p>
+                <p>━━━━━━━━━━━━━━━━━━━━━━</p>
+                <p>Отпечатано: {% now "d.m.Y H:i:s" %}</p>
+            </div>
+        </div>
+        
+        <div class="print-button-container">
+            <button class="print-button" onclick="window.print()">
+                🖨 Печать чека
+            </button>
+        </div>
+    </div>
+</body>
+</html>

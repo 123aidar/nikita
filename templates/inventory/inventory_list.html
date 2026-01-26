@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Инвентаризации - Продуктовый магазин "На Просторной"{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-page {
+        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        min-height: calc(100vh - 100px);
+        padding: 30px 0;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 30px 40px;
+        color: white;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .btn-new-inventory {
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid white;
+        border-radius: 15px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .btn-new-inventory:hover {
+        background: white;
+        color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+    }
+    
+    .inventory-table-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .inventory-table-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 25px 30px;
+        color: white;
+    }
+    
+    .inventory-table-header h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .inventory-table-body {
+        padding: 30px;
+    }
+    
+    .modern-table {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .modern-table thead tr {
+        background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+        border-radius: 12px;
+    }
+    
+    .modern-table thead th {
+        padding: 18px 20px;
+        font-weight: 700;
+        color: #2d3748;
+        border: none;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .modern-table thead th:first-child {
+        border-radius: 12px 0 0 12px;
+    }
+    
+    .modern-table thead th:last-child {
+        border-radius: 0 12px 12px 0;
+    }
+    
+    .modern-table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .modern-table tbody tr:hover {
+        background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+        transform: scale(1.01);
+    }
+    
+    .modern-table tbody td {
+        padding: 20px;
+        color: #4a5568;
+        border: none;
+        vertical-align: middle;
+    }
+    
+    .badge-perfect {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .badge-surplus {
+        background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .badge-shortage {
+        background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .product-link {
+        color: #667eea;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .product-link:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state p {
+        color: #718096;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inventory-page">
+    <div class="container">
+        <!-- Заголовок -->
+        <div class="page-header animate__animated animate__fadeInDown">
+            <h1>
+                <i class="fas fa-clipboard-list"></i> 
+                Инвентаризации
+            </h1>
+            <a href="{% url 'inventory:inventory_create' %}" class="btn-new-inventory">
+                <i class="fas fa-plus"></i> 
+                Провести инвентаризацию
+            </a>
+        </div>
+
+        <!-- Список инвентаризаций -->
+        <div class="inventory-table-card animate__animated animate__fadeInUp">
+            <div class="inventory-table-header">
+                <h4>
+                    <i class="fas fa-list"></i> 
+                    История инвентаризаций
+                </h4>
+            </div>
+            <div class="inventory-table-body">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Категории</th>
+                                <th>Кол-во товаров</th>
+                                <th>Разница</th>
+                                <th>Проводил</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in inventory_sessions %}
+                            <tr>
+                                <td>{{ session.first_date|date:"d.m.Y" }}</td>
+                                <td>{{ session.categories }}</td>
+                                <td><span class="badge bg-info">{{ session.products_count }}</span></td>
+                                <td>
+                                    {% if session.total_difference == 0 %}
+                                    <span class="badge-perfect"><i class="fas fa-check"></i> {{ session.total_difference }}</span>
+                                    {% elif session.total_difference > 0 %}
+                                    <span class="badge-surplus"><i class="fas fa-arrow-up"></i> +{{ session.total_difference }}</span>
+                                    {% else %}
+                                    <span class="badge-shortage"><i class="fas fa-arrow-down"></i> {{ session.total_difference }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.conducted_by__first_name }} {{ session.conducted_by__last_name }}</td>
+                                <td>
+                                    <a href="{% url 'inventory:print_inventory_report' session.session_id %}" 
+                                       class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fas fa-print"></i> Печать
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Инвентаризации не проводились</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

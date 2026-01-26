@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}Новая продажа{% endblock %}
+
+{% block content %}
+<div class="container main-content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card animate__animated animate__fadeIn">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-cash-register"></i> Новая продажа</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="saleForm">
+                        {% csrf_token %}
+                        
+                        <!-- Таблица товаров -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-shopping-cart"></i> Товары в продаже</h5>
+                                <button type="button" class="btn btn-success" onclick="addItem()">
+                                    <i class="fas fa-plus"></i> Добавить товар
+                                </button>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped" id="itemsTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="35%">Товар</th>
+                                            <th width="15%">Цена</th>
+                                            <th width="15%">Количество</th>
+                                            <th width="10%">Ед. изм.</th>
+                                            <th width="15%">Сумма</th>
+                                            <th width="10%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsTableBody">
+                                        <!-- Строки будут добавляться динамически -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>Базовая сумма:</strong></td>
+                                            <td colspan="2"><strong id="baseAmount">0.00 руб.</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>Наценка магазина (15%):</strong></td>
+                                            <td colspan="2"><strong id="markupAmount">0.00 руб.</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="text-end"><strong>НДС (20%):</strong></td>
+                                            <td colspan="2"><strong id="vatAmount">0.00 руб.</strong></td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <td colspan="4" class="text-end"><strong>ИТОГО с НДС и наценкой:</strong></td>
+                                            <td colspan="2"><strong id="totalAmount">0.00 руб.</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Скрытое поле для данных -->
+                        <input type="hidden" name="items_data" id="itemsData">
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'sales:sale_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Назад
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Зарегистрировать продажу
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Шаблон для новой строки -->
+<template id="itemRowTemplate">
+    <tr class="item-row animate__animated animate__fadeIn">
+        <td>
+            <select class="form-select product-select" onchange="updateItemPrice(this)" required>
+                <option value="">Выберите товар...</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" 
+                        data-price="{{ product.price }}" 
+                        data-quantity="{{ product.quantity }}"
+                        data-unit="{{ product.unit }}">
+                    {{ product.name }} (в наличии: {{ product.quantity }} {{ product.unit }})
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control price-input" step="0.01" readonly>
+        </td>
+        <td>
+            <input type="number" class="form-control quantity-input" step="0.01" min="0.01" 
+                   onchange="calculateRowTotal(this)" required>
+        </td>
+        <td>
+            <span class="unit-label">-</span>
+        </td>
+        <td>
+            <strong class="row-total">0.00 руб.</strong>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+<script>
+function addItem() {
+    const template = document.getElementById('itemRowTemplate');
+    const clone = template.content.cloneNode(true);
+    document.getElementById('itemsTableBody').appendChild(clone);
+}
+
+function removeItem(button) {
+    button.closest('tr').remove();
+    calculateTotal();
+}
+
+function updateItemPrice(select) {
+    const row = select.closest('tr');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption.value) {
+        const basePrice = parseFloat(selectedOption.dataset.price);
+        const priceWithMarkupAndVAT = basePrice * 1.15 * 1.2; // +15% наценка +20% НДС
+        const maxQuantity = parseFloat(selectedOption.dataset.quantity);
+        const unit = selectedOption.dataset.unit;
+        
+        row.querySelector('.price-input').value = priceWithMarkupAndVAT.toFixed(2);
+        row.querySelector('.unit-label').textContent = unit;
+        row.querySelector('.quantity-input').setAttribute('max', maxQuantity);
+        row.querySelector('.quantity-input').value = 1;
+        
+        calculateRowTotal(row.querySelector('.quantity-input'));
+    } else {
+        row.querySelector('.price-input').value = '';
+        row.querySelector('.unit-label').textContent = '-';
+        row.querySelector('.quantity-input').value = '';
+        row.querySelector('.row-total').textContent = '0.00 руб.';
+        calculateTotal();
+    }
+}
+
+function calculateRowTotal(input) {
+    const row = input.closest('tr');
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+    const quantity = parseFloat(input.value) || 0;
+    const maxQuantity = parseFloat(input.getAttribute('max')) || 999999;
+    
+    if (quantity > maxQuantity) {
+        alert(`Доступно только ${maxQuantity} единиц!`);
+        input.value = maxQuantity;
+        return;
+    }
+    
+    const total = price * quantity;
+    row.querySelector('.row-total').textContent = total.toFixed(2) + ' руб.';
+    
+    calculateTotal();
+}
+
+function calculateTotal() {
+    let totalWithMarkupAndVAT = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const rowTotal = row.querySelector('.row-total').textContent;
+        const amount = parseFloat(rowTotal.replace(' руб.', '')) || 0;
+        totalWithMarkupAndVAT += amount;
+    });
+    
+    // Расчет: базовая сумма -> +15% наценка -> +20% НДС
+    // Итоговая цена = базовая * 1.15 * 1.2 = базовая * 1.38
+    const baseAmount = totalWithMarkupAndVAT / 1.38; // Базовая сумма
+    const markupAmount = baseAmount * 0.15; // Наценка 15%
+    const amountWithMarkup = baseAmount + markupAmount; // Сумма с наценкой
+    const vatAmount = amountWithMarkup * 0.20; // НДС 20% от суммы с наценкой
+    
+    document.getElementById('baseAmount').textContent = baseAmount.toFixed(2) + ' руб.';
+    document.getElementById('markupAmount').textContent = markupAmount.toFixed(2) + ' руб.';
+    document.getElementById('vatAmount').textContent = vatAmount.toFixed(2) + ' руб.';
+    document.getElementById('totalAmount').textContent = totalWithMarkupAndVAT.toFixed(2) + ' руб.';
+}
+
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const items = [];
+    let isValid = true;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const quantityInput = row.querySelector('.quantity-input');
+        
+        if (!productSelect.value || !quantityInput.value) {
+            isValid = false;
+            return;
+        }
+        
+        items.push({
+            product_id: productSelect.value,
+            quantity: quantityInput.value
+        });
+    });
+    
+    if (!isValid || items.length === 0) {
+        alert('Заполните все поля и добавьте хотя бы один товар!');
+        return;
+    }
+    
+    document.getElementById('itemsData').value = JSON.stringify(items);
+    this.submit();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    addItem();
+});
+</script>
+
+<style>
+.item-row {
+    vertical-align: middle;
+}
+
+.item-row td {
+    padding: 10px !important;
+}
+
+.row-total {
+    color: #4CAF50;
+    font-size: 1.1em;
+}
+
+#totalAmount {
+    color: #4CAF50;
+    font-size: 1.3em;
+}
+
+#baseAmount, #markupAmount, #vatAmount {
+    color: #718096;
+    font-size: 1.1em;
+}
+
+.table tfoot {
+    background: #f8f9fa;
+}
+
+.table tfoot tr:last-child {
+    background: #e8f5e9;
+}
+</style>
+{% endblock %}
