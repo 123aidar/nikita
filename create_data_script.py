@@ -12,7 +12,7 @@ if not CustomUser.objects.filter(username='admin').exists():
         first_name='Админ', 
         last_name='Системы', 
         phone='+79991234567', 
-        role='director'
+        role='manager'
     )
     print(f"✓ Суперпользователь создан: {user}")
 else:
@@ -51,12 +51,9 @@ products_data = [
     ('Сок апельсиновый', 'Напитки', 120.00, 'л'),
 ]
 
-# Сначала создаём товары с временными артикулами
 import uuid
 for name, cat_name, price, unit in products_data:
     category = Category.objects.filter(name=cat_name).first() or categories[0]
-    # Используем временный артикул - он будет заменен при первой поставке
-    temp_sku = f"TEMP-{uuid.uuid4().hex[:8].upper()}"
     prod, created = Product.objects.get_or_create(
         name=name,
         defaults={
@@ -64,14 +61,13 @@ for name, cat_name, price, unit in products_data:
             'price': price,
             'quantity': 0,
             'unit': unit,
-            'sku': temp_sku,
             'description': f'Свежий товар: {name}'
         }
     )
     if created:
-        print(f"✓ Создан товар: {prod.name} (временный артикул: {temp_sku})")
+        print(f"✓ Создан товар: {prod.name}")
 
-print("\nСоздаём поставку с автоматической генерацией артикулов...")
+print("\nСоздаём поставку...")
 user = CustomUser.objects.first()
 if user and Product.objects.exists():
     supply = Supply.objects.create(
@@ -87,12 +83,7 @@ if user and Product.objects.exists():
             price_per_unit=product.price
         )
     supply.calculate_total()
-    print(f"✓ Поставка №{supply.id} создана, артикулы присвоены автоматически")
-    
-    # Выводим созданные артикулы
-    print("\nАртикулы товаров:")
-    for product in Product.objects.all():
-        print(f"  {product.name}: {product.sku}")
+    print(f"✓ Поставка №{supply.id} создана")
 else:
     print("✗ Не удалось создать поставку (нет пользователя или товаров)")
 

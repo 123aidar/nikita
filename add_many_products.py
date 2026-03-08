@@ -345,9 +345,6 @@ def create_products():
             print(f'\n=== Категория: {category_name} ===')
             
             for idx, (name, unit, purchase_price, selling_price) in enumerate(products, 1):
-                # Генерируем уникальный артикул
-                sku = f'{category_name[:3].upper()}-{idx:04d}'
-                
                 # Проверяем, существует ли товар
                 if Product.objects.filter(name=name, category=category).exists():
                     print(f'  - {name} уже существует, пропускаем')
@@ -359,7 +356,6 @@ def create_products():
                 # Создаем товар (используем selling_price как основную цену)
                 product = Product.objects.create(
                     name=name,
-                    sku=sku,
                     category=category,
                     description=f'Качественный товар из категории {category_name}',
                     price=Decimal(str(selling_price)),
@@ -368,7 +364,7 @@ def create_products():
                 )
                 
                 created_count += 1
-                print(f'  + Создан: {name} (артикул: {sku}, на складе: {quantity} {unit})')
+                print(f'  + Создан: {name} (на складе: {quantity} {unit})')
                 
         except Category.DoesNotExist:
             print(f'\nКатегория "{category_name}" не найдена, пропускаем')

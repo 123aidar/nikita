@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import WriteOff, Inventory
 from .forms import WriteOffForm, InventoryForm
 from products.models import Category, Product
+from accounts.models import CustomUser
 
 @login_required
 def write_off_list(request):
@@ -182,3 +185,108 @@ def print_inventory_report(request, session_id):
     }
     
     return render(request, 'inventory/inventory_report.html', context)
+
+
+@login_required
+def send_inventory_email(request, session_id):
+    """Отправляет детальный отчет об инвентаризации на email заведующего"""
+    if not request.user.can_manage_products():
+        messages.error(request, 'У вас нет прав для отправки отчетов.')
+        return redirect('products:dashboard')
+    
+    # Получаем все записи инвентаризации для данной сессии
+    inventory_items = Inventory.objects.filter(session_id=session_id).select_related('product__category', 'conducted_by')
+    
+    if not inventory_items.exists():
+        messages.error(request, 'Инвентаризация не найдена.')
+        return redirect('inventory:inventory_list')
+    
+    # Получаем email заведующих
+    managers = CustomUser.objects.filter(role='manager')
+    recipients = list(managers.values_list('email', flat=True))
+    recipients = [email for email in recipients if email]
+    
+    if not recipients:
+        messages.error(request, 'Не найдены email адреса заведующих для отправки.')
+        return redirect('inventory:inventory_list')
+    
+    # Подготовка данных
+    from collections import defaultdict
+    categories_data = defaultdict(list)
+    first_item = inventory_items.first()
+    
+    for item in inventory_items:
+        categories_data[item.product.category.name].append({
+            'product': item.product.name,
+            'unit': item.product.unit,
+            'expected': item.expected_quantity,
+            'actual': item.actual_quantity,
+            'difference': item.difference
+        })
+    
+    # Рассчитываем итоги
+    total_expected = sum(item.expected_quantity for item in inventory_items)
+    total_actual = sum(item.actual_quantity for item in inventory_items)
+    total_difference = sum(item.difference for item in inventory_items)
+    
+    # Формируем текст письма
+    conductor_name = f"{first_item.conducted_by.first_name} {first_item.conducted_by.last_name}" if first_item.conducted_by else "Неизвестно"
+    
+    message_body = f'''
+ОТЧЕТ ОБ ИНВЕНТАРИЗАЦИИ
+{'='*60}
+
+Дата проведения: {first_item.inventory_date.strftime('%d.%m.%Y %H:%M')}
+Проводил инвентаризацию: {conductor_name}
+Должность: {first_item.conducted_by.get_role_display() if first_item.conducted_by else 'N/A'}
+Всего проверено товаров: {inventory_items.count()}
+
+{'='*60}
+ДЕТАЛЬНАЯ ИНФОРМАЦИЯ ПО КАТЕГОРИЯМ
+{'='*60}
+
+'''
+    
+    for category_name, items in sorted(categories_data.items()):
+        message_body += f"\n📦 КАТЕГОРИЯ: {category_name}\n"
+        message_body += "-" * 60 + "\n"
+        
+        for item in items:
+            status_icon = "✅" if item['difference'] == 0 else ("⬆️" if item['difference'] > 0 else "⬇️")
+            message_body += f"{status_icon} {item['product']}\n"
+            message_body += f"   Ожидалось: {item['expected']} {item['unit']}\n"
+            message_body += f"   Фактически: {item['actual']} {item['unit']}\n"
+            message_body += f"   Разница: {item['difference']:+.2f} {item['unit']}\n\n"
+    
+    message_body += "=" * 60 + "\n"
+    message_body += "ИТОГОВЫЕ ПОКАЗАТЕЛИ\n"
+    message_body += "=" * 60 + "\n"
+    message_body += f"Общее ожидаемое количество: {total_expected:.2f}\n"
+    message_body += f"Общее фактическое количество: {total_actual:.2f}\n"
+    message_body += f"Общая разница: {total_difference:+.2f}\n\n"
+    
+    if total_difference == 0:
+        message_body += "✅ Инвентаризация прошла без расхождений!\n"
+    elif total_difference > 0:
+        message_body += f"⚠️ Обнаружен излишек: +{total_difference:.2f} единиц\n"
+    else:
+        message_body += f"⚠️ Обнаружена недостача: {total_difference:.2f} единиц\n"
+    
+    message_body += "\n" + "=" * 60 + "\n"
+    message_body += "Система управления продуктовым магазином 'На Просторной'\n"
+    message_body += "Это автоматически созданное сообщение, не отвечайте на него.\n"
+    
+    # Отправка email
+    try:
+        send_mail(
+            subject=f'📋 Отчет об инвентаризации от {first_item.inventory_date.strftime("%d.%m.%Y")}',
+            message=message_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipients,
+            fail_silently=False,
+        )
+        messages.success(request, f'Отчет успешно отправлен на {len(recipients)} адрес(а/ов)!')
+    except Exception as e:
+        messages.error(request, f'Ошибка при отправке email: {str(e)}')
+    
+    return redirect('inventory:inventory_list')

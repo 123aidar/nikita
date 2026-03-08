@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.db.models import Sum, F
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from datetime import timedelta
 from .models import Product, Category, Supply, SupplyItem, PriceHistory
 from django.db.models import Q
@@ -103,7 +103,7 @@ def category_products(request, category_id):
     if search_query:
         products = products.filter(
             Q(name__icontains=search_query) |
-            Q(sku__icontains=search_query)
+            Q(barcode__icontains=search_query)
         ).distinct()
 
     context = {
@@ -153,16 +153,11 @@ def product_update(request, pk):
         return redirect('products:product_list')
     
     product = get_object_or_404(Product, pk=pk)
-    old_sku = product.sku  # Сохраняем старый артикул
     
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            updated_product = form.save(commit=False)
-            # Восстанавливаем артикул, чтобы он не был удален
-            if old_sku:
-                updated_product.sku = old_sku
-            updated_product.save()
+            form.save()
             messages.success(request, 'Товар успешно обновлен!')
             return redirect('products:product_detail', pk=pk)
     else:
@@ -294,3 +289,65 @@ def print_supply_invoice(request, supply_id):
         'supply_items': supply_items,
     }
     return render(request, 'products/supply_invoice.html', context)
+
+
+@login_required
+def generate_barcode_image(request, pk):
+    """Генерация изображения штрих-кода для товара"""
+    product = get_object_or_404(Product, pk=pk)
+    
+    if not product.barcode:
+        return HttpResponse('У товара нет штрих-кода', status=404)
+    
+    try:
+        from io import BytesIO
+        import barcode
+        from barcode.writer import ImageWriter
+        
+        # Создаем штрих-код в формате EAN13
+        ean = barcode.get('ean13', product.barcode, writer=ImageWriter())
+        buffer = BytesIO()
+        ean.write(buffer)
+        buffer.seek(0)
+        
+        return HttpResponse(buffer.getvalue(), content_type='image/png')
+    except Exception as e:
+        return HttpResponse(f'Ошибка генерации штрих-кода: {str(e)}', status=500)
+
+
+@login_required
+def print_barcode_label(request, pk):
+    """Страница для печати этикетки со штрих-кодом"""
+    if not request.user.can_manage_products():
+        messages.error(request, 'У вас нет прав для просмотра товаров.')
+        return redirect('products:product_list')
+    
+    product = get_object_or_404(Product, pk=pk)
+    
+    if not product.barcode:
+        messages.error(request, 'У товара нет штрих-кода!')
+        return redirect('products:product_detail', pk=pk)
+    
+    return render(request, 'products/barcode_label.html', {'product': product})
+
+
+@login_required
+def barcode_check(request):
+    """Страница проверки штрих-кодов"""
+    if not request.user.can_manage_products():
+        messages.error(request, 'У вас нет прав для просмотра товаров.')
+        return redirect('products:dashboard')
+    
+    products = Product.objects.all().select_related('category')[:50]  # Показываем первые 50
+    total_count = Product.objects.count()
+    with_barcode = Product.objects.exclude(barcode__isnull=True).exclude(barcode='').count()
+    without_barcode = total_count - with_barcode
+    
+    context = {
+        'products': products,
+        'total_count': total_count,
+        'with_barcode': with_barcode,
+        'without_barcode': without_barcode,
+    }
+    return render(request, 'products/barcode_check.html', context)
+

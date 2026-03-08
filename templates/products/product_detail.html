@@ -82,16 +82,17 @@
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     
-    .sku-badge {
+    .barcode-badge {
         position: absolute;
-        top: 20px;
-        left: 20px;
-        background: rgba(255,255,255,0.95);
-        color: #667eea;
-        padding: 10px 20px;
+        bottom: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
         border-radius: 50px;
         font-weight: 600;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         z-index: 10;
     }
     
@@ -355,11 +356,6 @@
         color: white;
     }
     
-    .badge-sku {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-    }
-    
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -487,13 +483,15 @@
         </div>
         
         <div class="row">
-            <!-- Левая колонка: Изображение и экземпляры -->
+            <!-- Левая колонка: Изображение -->
             <div class="col-lg-5 mb-4">
                 <!-- Изображение товара -->
                 <div class="image-card animate__animated animate__fadeInLeft">
-                    <span class="sku-badge">
-                        <i class="fas fa-barcode"></i> {{ product.sku }}
+                    {% if product.barcode %}
+                    <span class="barcode-badge">
+                        <i class="fas fa-barcode"></i> {{ product.barcode }}
                     </span>
+                    {% endif %}
                     <div class="product-image-container">
                         {% if product.image %}
                             <img src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -504,65 +502,6 @@
                         {% endif %}
                     </div>
                 </div>
-                
-                <!-- Экземпляры товара -->
-                {% if instances %}
-                <div class="data-table animate__animated animate__fadeInUp mt-4">
-                    <div class="table-header">
-                        <h4>
-                            <i class="fas fa-box-open"></i>
-                            Экземпляры товара
-                        </h4>
-                    </div>
-                    <div class="table-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Индивидуальный номер</th>
-                                        <th>Годен до</th>
-                                        <th>Статус</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for instance in instances %}
-                                    <tr>
-                                        <td>
-                                            <span class="badge-custom badge-sku">
-                                                {{ instance.serial_number }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if instance.expiry_date %}
-                                                <i class="fas fa-calendar-alt text-muted me-2"></i>
-                                                {{ instance.expiry_date|date:'d.m.Y' }}
-                                            {% else %}
-                                                <span class="text-muted">—</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if instance.is_sold %}
-                                                <span class="badge-custom badge-sold">
-                                                    <i class="fas fa-check-circle"></i> Продан
-                                                </span>
-                                            {% elif instance.is_expired %}
-                                                <span class="badge-custom badge-expired">
-                                                    <i class="fas fa-exclamation-triangle"></i> Просрочен
-                                                </span>
-                                            {% else %}
-                                                <span class="badge-custom badge-available">
-                                                    <i class="fas fa-check"></i> В наличии
-                                                </span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
                 
                 <!-- Последние поставки (компактный вид) -->
                 {% if supply_items %}
@@ -606,11 +545,6 @@
                         <i class="fas fa-warehouse"></i>
                         <div class="stat-value">{{ product.quantity }}</div>
                         <div class="stat-label">На складе ({{ product.unit }})</div>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-box"></i>
-                        <div class="stat-value">{{ instances.count }}</div>
-                        <div class="stat-label">Экземпляров</div>
                     </div>
                     <div class="stat-item">
                         <i class="fas fa-shopping-cart"></i>
@@ -691,6 +625,12 @@
                         <i class="fas fa-dollar-sign"></i>
                         <span>Изменить цену</span>
                     </a>
+                    {% if product.barcode %}
+                    <a href="{% url 'products:barcode_label' product.id %}" class="action-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" target="_blank">
+                        <i class="fas fa-barcode"></i>
+                        <span>Печать штрих-кода</span>
+                    </a>
+                    {% endif %}
                     <form method="post" action="{% url 'products:product_delete' product.id %}" onsubmit="return confirm('Вы уверены, что хотите удалить товар {{ product.name }}?');">
                         {% csrf_token %}
                         <button type="submit" class="action-btn btn-delete">

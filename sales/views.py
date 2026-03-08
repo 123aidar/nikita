@@ -122,6 +122,45 @@ def get_product_info(request, product_id):
         })
 
 @login_required
+def search_by_barcode(request):
+    """API для поиска товара по штрих-коду"""
+    barcode = request.GET.get('barcode', '').strip()
+    
+    if not barcode:
+        return JsonResponse({
+            'success': False,
+            'error': 'Штрих-код не указан'
+        })
+    
+    try:
+        from decimal import Decimal
+        product = Product.objects.get(barcode=barcode)
+        
+        if product.quantity <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': f'Товар "{product.name}" отсутствует на складе'
+            })
+        
+        # Возвращаем полную информацию о товаре
+        return JsonResponse({
+            'success': True,
+            'product': {
+                'id': product.id,
+                'name': product.name,
+                'barcode': product.barcode,
+                'price': float(product.price * Decimal('1.38')),  # 1.15 * 1.2 = 1.38
+                'quantity': float(product.quantity),
+                'unit': product.unit
+            }
+        })
+    except Product.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': f'Товар со штрих-кодом "{barcode}" не найден'
+        })
+
+@login_required
 def print_receipt(request, pk):
     """Печать чека продажи"""
     if not request.user.can_manage_sales():

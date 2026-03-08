@@ -9,5 +9,6 @@ urlpatterns = [
     path('inventories/', views.inventory_list, name='inventory_list'),
     path('inventories/create/', views.inventory_create, name='inventory_create'),
     path('inventories/report/<str:session_id>/', views.print_inventory_report, name='print_inventory_report'),
+    path('inventories/send-email/<str:session_id>/', views.send_inventory_email, name='send_inventory_email'),
 ]
 

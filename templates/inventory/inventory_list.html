@@ -232,8 +232,14 @@
                                 <td>{{ session.conducted_by__first_name }} {{ session.conducted_by__last_name }}</td>
                                 <td>
                                     <a href="{% url 'inventory:print_inventory_report' session.session_id %}" 
-                                       class="btn btn-sm btn-outline-primary" target="_blank">
-                                        <i class="fas fa-print"></i> Печать
+                                       class="btn btn-sm btn-outline-primary" target="_blank" title="Печать отчета">
+                                        <i class="fas fa-print"></i>
+                                    </a>
+                                    <a href="{% url 'inventory:send_inventory_email' session.session_id %}" 
+                                       class="btn btn-sm btn-outline-success" 
+                                       onclick="return confirm('Отправить отчет на email заведующего?')"
+                                       title="Отправить на email">
+                                        <i class="fas fa-share"></i>
                                     </a>
                                 </td>
                             </tr>

@@ -14,6 +14,32 @@
                     <form method="post" id="saleForm">
                         {% csrf_token %}
                         
+                        <!-- Сканер штрих-кодов -->
+                        <div class="mb-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="mb-3"><i class="fas fa-barcode"></i> Сканер штрих-кодов</h5>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-barcode fa-2x text-primary"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control form-control-lg" 
+                                               id="barcodeInput" 
+                                               placeholder="Отсканируйте штрих-код или введите вручную..."
+                                               autocomplete="off">
+                                        <button type="button" class="btn btn-primary" onclick="searchBarcode()">
+                                            <i class="fas fa-search"></i> Найти
+                                        </button>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Наведите сканер на штрих-код товара или введите код вручную и нажмите Enter
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Таблица товаров -->
                         <div class="mb-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -116,6 +142,167 @@
 </template>
 
 <script>
+// Barcode scanning functionality
+let scanTimeout;
+
+function searchBarcode() {
+    const barcodeInput = document.getElementById('barcodeInput');
+    const barcode = barcodeInput.value.trim();
+    
+    if (!barcode) {
+        return;
+    }
+    
+    // Показать индикатор загрузки
+    barcodeInput.disabled = true;
+    
+    fetch(`/sales/api/search-barcode/?barcode=${encodeURIComponent(barcode)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Добавить товар в список
+                addItemFromBarcode(data.product);
+                barcodeInput.value = '';
+                
+                // Показать уведомление
+                showNotification('Товар добавлен!', 'success');
+            } else {
+                showNotification('Ошибка чтения штрихкода', 'danger');
+            }
+        })
+        .catch(error => {
+            showNotification('Ошибка чтения штрихкода', 'danger');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            barcodeInput.disabled = false;
+            barcodeInput.focus();
+        });
+}
+
+function addItemFromBarcode(product) {
+    // Проверяем, есть ли уже этот товар в списке
+    let existingRow = null;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const select = row.querySelector('.product-select');
+        if (select && select.value == product.id) {
+            existingRow = row;
+        }
+    });
+    
+    if (existingRow) {
+        // Увеличиваем количество существующего товара
+        const quantityInput = existingRow.querySelector('.quantity-input');
+        const currentQty = parseFloat(quantityInput.value) || 0;
+        const maxQty = parseFloat(quantityInput.getAttribute('max'));
+        
+        if (currentQty + 1 <= maxQty) {
+            quantityInput.value = currentQty + 1;
+            calculateRowTotal(quantityInput);
+            
+            // Подсветить строку
+            existingRow.classList.add('table-primary');
+            setTimeout(() => {
+                existingRow.classList.remove('table-primary');
+            }, 500);
+        } else {
+            // Недостаточно товара - просто не добавляем
+            return;
+        }
+    } else {
+        // Добавляем новую строку
+        const template = document.getElementById('itemRowTemplate');
+        const clone = template.content.cloneNode(true);
+        
+        // Заполняем данные товара
+        const select = clone.querySelector('.product-select');
+        select.value = product.id;
+        
+        // Задаем данные вручную
+        const priceInput = clone.querySelector('.price-input');
+        const quantityInput = clone.querySelector('.quantity-input');
+        const unitLabel = clone.querySelector('.unit-label');
+        
+        priceInput.value = product.price.toFixed(2);
+        quantityInput.value = 1;
+        quantityInput.setAttribute('max', product.quantity);
+        unitLabel.textContent = product.unit;
+        
+        // Устанавливаем атрибуты для select
+        const option = select.querySelector(`option[value="${product.id}"]`);
+        if (option) {
+            option.selected = true;
+        }
+        
+        document.getElementById('itemsTableBody').appendChild(clone);
+        
+        // Рассчитываем сумму
+        const addedRow = document.getElementById('itemsTableBody').lastElementChild;
+        calculateRowTotal(addedRow.querySelector('.quantity-input'));
+        
+        // Подсветить новую строку
+        addedRow.classList.add('table-success');
+        setTimeout(() => {
+            addedRow.classList.remove('table-success');
+        }, 500);
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed animate__animated animate__fadeInRight`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 200px;
+        max-width: 250px;
+        padding: 10px 15px;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin: 0;
+    `;
+    notification.innerHTML = `<strong>${message}</strong>`;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.remove('animate__fadeInRight');
+        notification.classList.add('animate__fadeOutRight');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 1500);
+}
+
+// Обработчик ввода в поле штрих-кода
+document.addEventListener('DOMContentLoaded', function() {
+    const barcodeInput = document.getElementById('barcodeInput');
+    
+    // Автоматический поиск при вводе (для сканеров)
+    barcodeInput.addEventListener('input', function() {
+        clearTimeout(scanTimeout);
+        
+        // Если введено достаточно символов (обычно штрих-код 8-13 символов)
+        if (this.value.length >= 8) {
+            scanTimeout = setTimeout(() => {
+                searchBarcode();
+            }, 100); // Небольшая задержка для завершения сканирования
+        }
+    });
+    
+    // Поиск по Enter
+    barcodeInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchBarcode();
+        }
+    });
+    
+    // Автофокус на поле штрих-кода
+    barcodeInput.focus();
+});
+
 function addItem() {
     const template = document.getElementById('itemRowTemplate');
     const clone = template.content.cloneNode(true);
@@ -159,7 +346,6 @@ function calculateRowTotal(input) {
     const maxQuantity = parseFloat(input.getAttribute('max')) || 999999;
     
     if (quantity > maxQuantity) {
-        alert(`Доступно только ${maxQuantity} единиц!`);
         input.value = maxQuantity;
         return;
     }
@@ -213,16 +399,11 @@ document.getElementById('saleForm').addEventListener('submit', function(e) {
     });
     
     if (!isValid || items.length === 0) {
-        alert('Заполните все поля и добавьте хотя бы один товар!');
         return;
     }
     
     document.getElementById('itemsData').value = JSON.stringify(items);
     this.submit();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    addItem();
 });
 </script>
 

@@ -4,7 +4,6 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
-        ('director', 'Директор'),
         ('manager', 'Заведующий'),
         ('cashier', 'Кассир'),
     )
@@ -21,13 +20,14 @@ class CustomUser(AbstractUser):
         return f"{self.get_full_name()} ({self.get_role_display()})"
     
     def can_manage_products(self):
-        return self.role in ['director', 'manager']
+        return self.role == 'manager'
     
     def can_manage_sales(self):
-        return self.role in ['director', 'manager', 'cashier']
+        return self.role in ['manager', 'cashier']
     
     def can_view_reports(self):
-        return self.role in ['director']
+        return self.role == 'manager'
     
     def is_manager_or_director(self):
-        return self.role in ['director', 'manager']
+        # Метод оставлен для совместимости, теперь проверяет только manager
+        return self.role == 'manager'

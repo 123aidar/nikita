@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/', views.sale_detail, name='sale_detail'),
     path('<int:pk>/print/', views.print_receipt, name='print_receipt'),
     path('api/product/<int:product_id>/', views.get_product_info, name='get_product_info'),
+    path('api/search-barcode/', views.search_by_barcode, name='search_by_barcode'),
 ]

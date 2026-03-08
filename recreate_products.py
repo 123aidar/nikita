@@ -219,16 +219,12 @@ def create_products():
             print(f'\n=== {category_name} ===')
             
             for idx, (name, unit, selling_price) in enumerate(products, 1):
-                # Генерируем уникальный артикул
-                sku = f'{category_name[:3].upper()}-{idx:04d}'
-                
                 # Генерируем случайное количество на складе
                 quantity = random.randint(20, 150)
                 
                 # Создаем товар
                 product = Product.objects.create(
                     name=name,
-                    sku=sku,
                     category=category,
                     description=f'Премиум товар из категории {category_name}',
                     price=Decimal(str(selling_price)),

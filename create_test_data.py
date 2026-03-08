@@ -37,15 +37,6 @@ for cat_data in categories_data:
 # Создание пользователей
 users_data = [
     {
-        'username': 'director',
-        'password': 'director123',
-        'first_name': 'Иван',
-        'last_name': 'Петров',
-        'role': 'director',
-        'email': 'director@shop.ru',
-        'phone': '+7 (999) 123-45-67'
-    },
-    {
         'username': 'manager',
         'password': 'manager123',
         'first_name': 'Мария',
@@ -143,10 +134,7 @@ print("\n" + "="*50)
 print("✓ Тестовые данные успешно созданы!")
 print("="*50)
 print("\nДля входа используйте:")
-print("\nДиректор:")
-print("  Логин: director")
-print("  Пароль: director123")
-print("\nЗаведующий:")
+print("\nЗаведующий (полный доступ):")
 print("  Логин: manager")
 print("  Пароль: manager123")
 print("\nКассир:")

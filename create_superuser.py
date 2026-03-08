@@ -18,7 +18,7 @@ admin = CustomUser.objects.create_superuser(
     first_name='Админ',
     last_name='Администратор',
     phone='+79991234567',
-    role='director'
+    role='manager'
 )
 
 print(f'✓ Суперпользователь создан: {admin.get_full_name()}')

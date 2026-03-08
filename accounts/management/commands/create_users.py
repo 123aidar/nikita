@@ -7,20 +7,10 @@ from accounts.models import CustomUser
 
 
 class Command(BaseCommand):
-    help = 'Создает пользователей: директор, менеджер и кассир'
+    help = 'Создает пользователей: менеджер и кассир'
 
     def handle(self, *args, **options):
         users_data = [
-            {
-                'username': 'director',
-                'password': 'director123',
-                'email': 'director@prostornaya.ru',
-                'first_name': 'Иван',
-                'last_name': 'Директоров',
-                'role': 'director',
-                'is_staff': True,
-                'is_superuser': True,
-            },
             {
                 'username': 'manager',
                 'password': 'manager123',
@@ -29,7 +19,7 @@ class Command(BaseCommand):
                 'last_name': 'Менеджерова',
                 'role': 'manager',
                 'is_staff': True,
-                'is_superuser': False,
+                'is_superuser': True,
             },
             {
                 'username': 'cashier',
@@ -91,9 +81,7 @@ class Command(BaseCommand):
                 username = user_data['username']
                 user = CustomUser.objects.get(username=username)
                 # Восстанавливаем пароль из исходных данных
-                password = 'director123' if username == 'director' else (
-                    'manager123' if username == 'manager' else 'cashier123'
-                )
+                password = 'manager123' if username == 'manager' else 'cashier123'
                 
                 self.stdout.write(
                     f'\n{user.get_role_display()}:\n'

@@ -7,8 +7,7 @@ python manage.py create_users
 ```
 
 **Создаются:**
-- Директор: `director / director123`
-- Менеджер: `manager / manager123`
+- Менеджер: `manager / manager123` (полный доступ)
 - Кассир: `cashier / cashier123`
 
 ## Работа с базой данных

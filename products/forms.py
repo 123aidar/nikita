@@ -14,9 +14,10 @@ class CategoryForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'category', 'image', 'description', 'price', 'quantity', 'unit']
+        fields = ['name', 'barcode', 'category', 'image', 'description', 'price', 'quantity', 'unit']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'barcode': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Штрих-код (13 цифр)'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'image': forms.FileInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -27,17 +28,9 @@ class ProductForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Артикул генерируется автоматически и не должен редактироваться
+        # Изменяем порядок полей
         if self.instance and self.instance.pk:
-            self.fields['sku_display'] = forms.CharField(
-                label='Артикул',
-                initial=self.instance.sku,
-                disabled=True,
-                required=False,
-                widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'})
-            )
-            # Изменяем порядок полей
-            field_order = ['name', 'sku_display', 'category', 'image', 'description', 'price', 'quantity', 'unit']
+            field_order = ['name', 'barcode', 'category', 'image', 'description', 'price', 'quantity', 'unit']
             self.order_fields(field_order)
 
 from .models import ProductInstance

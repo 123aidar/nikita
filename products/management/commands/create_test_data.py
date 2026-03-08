@@ -19,7 +19,7 @@ class Command(BaseCommand):
                 first_name='Админ', 
                 last_name='Системы', 
                 phone='+79991234567', 
-                role='director'
+                role='manager'
             )
             self.stdout.write(self.style.SUCCESS(f'✓ Суперпользователь создан: {user}'))
         else:
@@ -60,7 +60,6 @@ class Command(BaseCommand):
             if not category:
                 category = Category.objects.first()
             
-            temp_sku = f"TEMP-{uuid.uuid4().hex[:8].upper()}"
             prod, created = Product.objects.get_or_create(
                 name=name,
                 defaults={
@@ -68,14 +67,13 @@ class Command(BaseCommand):
                     'price': price,
                     'quantity': 0,
                     'unit': unit,
-                    'sku': temp_sku,
                     'description': f'Свежий товар: {name}'
                 }
             )
             if created:
-                self.stdout.write(self.style.SUCCESS(f'✓ Создан товар: {prod.name} (временный артикул: {temp_sku})'))
+                self.stdout.write(self.style.SUCCESS(f'✓ Создан товар: {prod.name}'))
 
-        self.stdout.write('\nСоздаём поставку с автоматической генерацией артикулов...')
+        self.stdout.write('\nСоздаём поставку...')
         user = CustomUser.objects.first()
         if user and Product.objects.exists():
             supply = Supply.objects.create(
@@ -91,11 +89,7 @@ class Command(BaseCommand):
                     price_per_unit=product.price
                 )
             supply.calculate_total()
-            self.stdout.write(self.style.SUCCESS(f'✓ Поставка №{supply.id} создана, артикулы присвоены автоматически'))
-            
-            self.stdout.write('\nАртикулы товаров:')
-            for product in Product.objects.all():
-                self.stdout.write(f'  {product.name}: {product.sku}')
+            self.stdout.write(self.style.SUCCESS(f'✓ Поставка №{supply.id} создана'))
         else:
             self.stdout.write(self.style.ERROR('✗ Не удалось создать поставку'))
 

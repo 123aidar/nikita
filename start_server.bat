@@ -46,7 +46,9 @@ if %ERRORLEVEL% EQU 0 (
     )
 )
 
-echo Запускаю Django сервер на порту 8000...
+echo Запускаю Django сервер с WebSocket поддержкой на порту 8000...
 echo После запуска откройте: http://127.0.0.1:8000/
 echo.
-python manage.py runserver
+echo Используется Daphne ASGI сервер для поддержки WebSocket
+echo.
+venv\Scripts\daphne.exe -b 127.0.0.1 -p 8000 grocery_store.asgi:application

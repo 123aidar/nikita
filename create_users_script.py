@@ -22,16 +22,6 @@ def create_users():
     
     users_data = [
         {
-            'username': 'director',
-            'password': 'director123',
-            'email': 'director@prostornaya.ru',
-            'first_name': 'Иван',
-            'last_name': 'Директоров',
-            'role': 'director',
-            'is_staff': True,
-            'is_superuser': True,
-        },
-        {
             'username': 'manager',
             'password': 'manager123',
             'email': 'manager@prostornaya.ru',
@@ -39,7 +29,7 @@ def create_users():
             'last_name': 'Менеджерова',
             'role': 'manager',
             'is_staff': True,
-            'is_superuser': False,
+            'is_superuser': True,
         },
         {
             'username': 'cashier',

@@ -40,16 +40,6 @@ for name, icon, desc in categories_data:
 # Создание пользователей
 print("\nСоздание пользователей...")
 
-director = CustomUser.objects.create_user(
-    username='director',
-    email='director@store.com',
-    password='director123',
-    first_name='Иван',
-    last_name='Петров',
-    role='director'
-)
-print("✓ Директор: director / director123")
-
 manager = CustomUser.objects.create_user(
     username='manager',
     email='manager@store.com',
@@ -131,10 +121,7 @@ print("\n" + "="*50)
 print("Тестовые данные успешно созданы!")
 print("="*50)
 print("\nДля входа используйте:")
-print("\nДиректор:")
-print("  Логин: director")
-print("  Пароль: director123")
-print("\nЗаведующий:")
+print("\nЗаведующий (полный доступ):")
 print("  Логин: manager")
 print("  Пароль: manager123")
 print("\nКассир:")

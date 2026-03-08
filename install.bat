@@ -59,8 +59,7 @@ if /i "%answer%"=="y" (
     echo ✓ Тестовые данные созданы!
     echo.
     echo Тестовые аккаунты:
-    echo   director / director123
-    echo   manager / manager123
+    echo   manager / manager123 (полный доступ)
     echo   cashier / cashier123
 )
 

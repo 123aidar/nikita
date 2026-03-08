@@ -10,10 +10,11 @@ from .models import ProductInstance
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'quantity', 'unit']
+    list_display = ['name', 'barcode', 'category', 'price', 'quantity', 'unit']
     list_filter = ['category', 'created_at']
-    search_fields = ['name', 'description']
+    search_fields = ['name', 'barcode', 'description']
     date_hierarchy = 'created_at'
+    readonly_fields = ['created_at', 'updated_at']
 
 @admin.register(ProductInstance)
 class ProductInstanceAdmin(admin.ModelAdmin):

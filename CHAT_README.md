@@ -140,7 +140,7 @@ grocery_store/
 
 После запуска `full_reset_and_start.bat`:
 
-- **Администратор**: admin / admin (роль: director)
+- **Администратор**: admin / admin (роль: manager)
 - **Менеджер**: manager / manager (роль: manager)
 - **Кассир**: cashier / cashier (роль: cashier)
 

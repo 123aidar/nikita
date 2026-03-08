@@ -18,6 +18,7 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name='Название')
     sku = models.CharField(max_length=50, verbose_name='Артикул', blank=True, null=True, unique=True)
+    barcode = models.CharField(max_length=13, verbose_name='Штрих-код', blank=True, null=True, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products', verbose_name='Категория')
     image = models.ImageField(upload_to='products/', blank=True, null=True, verbose_name='Изображение')
     description = models.TextField(blank=True, verbose_name='Описание')
@@ -116,17 +117,6 @@ class SupplyItem(models.Model):
         return self.quantity * self.price_per_unit
     
     def save(self, *args, **kwargs):
-        # Генерируем постоянный артикул, если его нет или он временный
-        if not self.product.sku or (self.product.sku and self.product.sku.startswith('TEMP-')):
-            from django.utils.crypto import get_random_string
-            prefix = 'SKU'
-            unique = False
-            while not unique:
-                sku_candidate = f"{prefix}-{get_random_string(8).upper()}"
-                if not Product.objects.filter(sku=sku_candidate).exists():
-                    unique = True
-            self.product.sku = sku_candidate
-            self.product.save()
         # Если цена не указана, берем текущую цену товара
         if not self.price_per_unit:
             self.price_per_unit = self.product.price

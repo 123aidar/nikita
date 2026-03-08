@@ -165,7 +165,7 @@ d:\1\  (grocery_store_project)
 ```python
 CustomUser
   - username, email, password (Django стандарт)
-  - role (director/manager/cashier)
+  - role (manager/cashier)
   - avatar (ImageField)
   - phone
   - методы: can_manage_products(), can_manage_sales(), can_view_reports()

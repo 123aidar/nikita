@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Этикетка со штрих-кодом - {{ product.name }}</title>
+    <style>
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+            .label {
+                page-break-after: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .label {
+            width: 400px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 20px auto;
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .barcode-container {
+            margin: 20px 0;
+        }
+        
+        .barcode-image {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .barcode-number {
+            font-size: 14px;
+            font-family: monospace;
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 15px 0;
+        }
+        
+        .additional-info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .btn-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print btn-container">
+        <button class="btn btn-primary" onclick="window.print()">
+            🖨️ Печать
+        </button>
+        <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-secondary">
+            ← Назад
+        </a>
+    </div>
+    
+    <div class="label">
+        <div class="product-name">{{ product.name }}</div>
+        
+        <div class="barcode-container">
+            <img src="{% url 'products:barcode_image' product.pk %}" 
+                 alt="Штрих-код {{ product.barcode }}" 
+                 class="barcode-image">
+        </div>
+        
+        <div class="barcode-number">{{ product.barcode }}</div>
+        
+        <div class="price">{{ product.price }} руб./{{ product.unit }}</div>
+        
+        <div class="additional-info">
+            Категория: {{ product.category.name }}
+        </div>
+    </div>
+    
+    <script>
+        // Автоматически открыть диалог печати при загрузке
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                // window.print(); // Раскомментируйте для автопечати
+            }, 500);
+        });
+    </script>
+</body>
+</html>
