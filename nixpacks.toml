@@ -1,0 +1,18 @@
+# nixpacks.toml - Railway build configuration
+
+[phases.setup]
+nixPkgs = ["python313"]
+
+[phases.install]
+cmds = [
+    "python -m venv /opt/venv",
+    ". /opt/venv/bin/activate && pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+    ". /opt/venv/bin/activate && python manage.py collectstatic --noinput"
+]
+
+[start]
+cmd = ". /opt/venv/bin/activate && python manage.py migrate && daphne -b 0.0.0.0 -p ${PORT:-8000} grocery_store.asgi:application"

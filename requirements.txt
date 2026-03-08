@@ -6,7 +6,6 @@ django-crispy-forms==2.1
 crispy-bootstrap5==0.7
 daphne==4.0.0
 redis==5.0.1
-gunicorn
 whitenoise
 python-barcode[images]
 psycopg2-binary
