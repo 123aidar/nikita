@@ -111,8 +111,8 @@ for cat_name, prod_name, price, unit, stock, barcode in products_data:
         defaults={
             'category': categories[cat_name],
             'price': Decimal(str(price)),
-            'unit_of_measure': unit,
-            'stock_quantity': stock,
+            'unit': unit,
+            'quantity': stock,
             'barcode': barcode,
             'description': f'{prod_name} - высокое качество'
         }
