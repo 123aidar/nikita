@@ -20,6 +20,12 @@ if CustomUser.objects.count() == 0 and Category.objects.count() == 0:
     
     # Запускаем скрипт инициализации
     exec(open('init_production_db.py').read())
+    
+    # Добавляем большой ассортимент товаров
+    print("\n" + "=" * 60)
+    print("ДОБАВЛЕНИЕ РАСШИРЕННОГО АССОРТИМЕНТА")
+    print("=" * 60)
+    exec(open('add_many_products.py').read())
 else:
     print("✓ База данных уже заполнена")
     print(f"  • Пользователей: {CustomUser.objects.count()}")
