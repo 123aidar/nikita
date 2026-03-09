@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Автоматическая инициализация БД если она пустая
-Вызывается после миграций при деплое
+Полная инициализация БД при первом запуске
+Удаляет старые данные и создает новые
 """
 import os
 import django
@@ -12,16 +12,18 @@ django.setup()
 from accounts.models import CustomUser
 from products.models import Category, Product
 
-# Проверяем есть ли данные
-if CustomUser.objects.count() == 0 and Category.objects.count() == 0:
-    print("=" * 60)
-    print("БД ПУСТАЯ - АВТОМАТИЧЕСКОЕ ЗАПОЛНЕНИЕ")
-    print("=" * 60)
+print("=" * 60)
+print("ПОЛНАЯ ИНИЦИАЛИЗАЦИЯ БАЗЫ ДАННЫХ")
+print("=" * 60)
+
+# Проверяем нужна ли инициализация
+if CustomUser.objects.count() == 0 and Product.objects.count() == 0:
+    print("\nБД пустая - начинаем заполнение...")
     
-    # Запускаем скрипт инициализации
+    # Запускаем базовую инициализацию (пользователи + базовые категории и товары)
     exec(open('init_production_db.py').read())
     
-    # Добавляем расширенный ассортимент (быстрая массовая вставка)
+    # Добавляем расширенный каталог товаров
     print("\n" + "=" * 60)
     print("ЗАГРУЗКА РАСШИРЕННОГО КАТАЛОГА")
     print("=" * 60)
@@ -34,7 +36,7 @@ if CustomUser.objects.count() == 0 and Category.objects.count() == 0:
     print(f"  • Товаров: {Product.objects.count()}")
     print("=" * 60)
 else:
-    print("✓ База данных уже заполнена")
+    print("\n✓ База данных уже заполнена")
     print(f"  • Пользователей: {CustomUser.objects.count()}")
     print(f"  • Категорий: {Category.objects.count()}")
     print(f"  • Товаров: {Product.objects.count()}")

@@ -17,23 +17,23 @@ print("=" * 60)
 print("ЗАПОЛНЕНИЕ БАЗЫ ДАННЫХ")
 print("=" * 60)
 
-# 1. Создание администратора
-print("\n1. Создание администратора...")
-CustomUser.objects.filter(username='admin').delete()
-admin = CustomUser.objects.create_superuser(
-    username='admin',
-    email='admin@store.com',
-    password='admin',
-    first_name='Администратор',
-    last_name='Системы',
+# 1. Создание менеджера (главный администратор)
+print("\n1. Создание менеджера...")
+CustomUser.objects.filter(username='manager').delete()
+manager = CustomUser.objects.create_superuser(
+    username='manager',
+    email='manager@store.com',
+    password='manager',
+    first_name='Главный',
+    last_name='Менеджер',
     phone='+79991234567'
 )
-admin.role = 'manager'
-admin.save()
-print(f"   ✓ Администратор создан: {admin.get_full_name()}")
-print(f"   Роль: {admin.get_role_display()}")
-print(f"   Логин: admin")
-print(f"   Пароль: admin")
+manager.role = 'manager'
+manager.save()
+print(f"   ✓ Менеджер создан: {manager.get_full_name()}")
+print(f"   Роль: {manager.get_role_display()}")
+print(f"   Логин: manager")
+print(f"   Пароль: manager")
 
 # 2. Создание кассира
 print("\n2. Создание кассира...")
