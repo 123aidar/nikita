@@ -21,8 +21,18 @@ if CustomUser.objects.count() == 0 and Category.objects.count() == 0:
     # Запускаем скрипт инициализации
     exec(open('init_production_db.py').read())
     
-    print("\n✓ Базовая инициализация завершена")
-    print("  Полный ассортимент товаров будет добавлен при первом посещении сайта")
+    # Добавляем расширенный ассортимент (быстрая массовая вставка)
+    print("\n" + "=" * 60)
+    print("ЗАГРУЗКА РАСШИРЕННОГО КАТАЛОГА")
+    print("=" * 60)
+    exec(open('add_many_products.py').read())
+    
+    print("\n" + "=" * 60)
+    print("ИНИЦИАЛИЗАЦИЯ ЗАВЕРШЕНА")
+    print(f"  • Пользователей: {CustomUser.objects.count()}")
+    print(f"  • Категорий: {Category.objects.count()}")
+    print(f"  • Товаров: {Product.objects.count()}")
+    print("=" * 60)
 else:
     print("✓ База данных уже заполнена")
     print(f"  • Пользователей: {CustomUser.objects.count()}")

@@ -338,43 +338,54 @@ products_data = {
 
 def create_products():
     created_count = 0
+    bulk_products = []
     
     for category_name, products in products_data.items():
         try:
             category = Category.objects.get(name=category_name)
             print(f'\n=== Категория: {category_name} ===')
             
+            # Получаем существующие товары для этой категории
+            existing_products = set(
+                Product.objects.filter(category=category).values_list('name', flat=True)
+            )
+            
             for idx, (name, unit, purchase_price, selling_price) in enumerate(products, 1):
                 # Проверяем, существует ли товар
-                if Product.objects.filter(name=name, category=category).exists():
-                    print(f'  - {name} уже существует, пропускаем')
+                if name in existing_products:
                     continue
                 
                 # Генерируем случайное количество на складе
                 quantity = random.randint(15, 200)
                 
-                # Создаем товар (используем selling_price как основную цену)
-                product = Product.objects.create(
+                # Добавляем товар в список для массовой вставки
+                bulk_products.append(Product(
                     name=name,
                     category=category,
                     description=f'Качественный товар из категории {category_name}',
                     price=Decimal(str(selling_price)),
                     quantity=quantity,
                     unit=unit
-                )
+                ))
                 
                 created_count += 1
-                print(f'  + Создан: {name} (на складе: {quantity} {unit})')
                 
         except Category.DoesNotExist:
             print(f'\nКатегория "{category_name}" не найдена, пропускаем')
             continue
     
-    print(f'\n{"="*50}')
-    print(f'Всего создано товаров: {created_count}')
-    print(f'{"="*50}')
+    # Массовая вставка всех товаров одним запросом
+    if bulk_products:
+        Product.objects.bulk_create(bulk_products, batch_size=100)
+        print(f'\n{"="*50}')
+        print(f'Создано товаров: {created_count}')
+        print(f'{"="*50}')
+    else:
+        print('\nВсе товары уже существуют')
+    
+    return created_count
 
 if __name__ == '__main__':
-    print('Начинаем добавление товаров...\n')
+    print('Начинаем добавление товаров...')
     create_products()
-    print('\nГотово!')
+    print('Готово!')
