@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Результат загрузки{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle"></i> Загрузка завершена</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check"></i> Товары успешно загружены в базу данных!
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Результат:</h5>
+                        <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">{{ output }}</pre>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                            <i class="fas fa-list"></i> Перейти к списку товаров
+                        </a>
+                        <a href="{% url 'products:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> На главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

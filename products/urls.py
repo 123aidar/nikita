@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .load_products_view import load_products_view
 
 app_name = 'products'
 
@@ -21,4 +22,5 @@ urlpatterns = [
     path('supplies/', views.supply_list, name='supply_list'),
     path('supplies/create/', views.supply_create, name='supply_create'),
     path('supplies/<int:supply_id>/invoice/', views.print_supply_invoice, name='print_supply_invoice'),
+    path('admin/load-products/', load_products_view, name='load_products'),
 ]

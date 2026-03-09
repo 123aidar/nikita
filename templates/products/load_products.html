@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Загрузка товаров{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-download"></i> Загрузка расширенного каталога товаров</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Эта функция добавит расширенный каталог товаров в базу данных (примерно 280-450 товаров).
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Текущее состояние базы данных:</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Категорий
+                                <span class="badge bg-primary rounded-pill">{{ total_categories }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Товаров
+                                <span class="badge bg-success rounded-pill">{{ total_products }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Внимание:</strong> Процесс займет несколько секунд. Дублирующиеся товары будут пропущены.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-play"></i> Загрузить товары
+                            </button>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Назад к списку товаров
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
