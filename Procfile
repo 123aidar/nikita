@@ -1,1 +1,1 @@
-web: python manage.py migrate && daphne -b 0.0.0.0 -p ${PORT:-8000} grocery_store.asgi:application
+web: python manage.py migrate && python auto_init_db.py && daphne -b 0.0.0.0 -p ${PORT:-8000} grocery_store.asgi:application
