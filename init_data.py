@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import django
 import random
 from decimal import Decimal
 
+# Добавляем текущую директорию в путь
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Настройка Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'grocery_store.settings')
 django.setup()
 
@@ -341,114 +346,149 @@ products_data = {
 
 def create_categories():
     """Создание категорий"""
-    categories = list(products_data.keys())
-    created = 0
-    
-    for cat_name in categories:
-        _, is_created = Category.objects.get_or_create(name=cat_name)
-        if is_created:
-            created += 1
-    
-    print(f'✓ Создано категорий: {created}')
-    return created
+    try:
+        categories = list(products_data.keys())
+        created = 0
+
+        for cat_name in categories:
+            _, is_created = Category.objects.get_or_create(name=cat_name)
+            if is_created:
+                created += 1
+
+        print(f'✓ Создано категорий: {created}')
+        return created
+    except Exception as e:
+        print(f'✗ Ошибка создания категорий: {e}')
+        return 0
 
 def create_products():
     """Создание товаров"""
-    created_count = 0
-    bulk_products = []
-    
-    for category_name, products in products_data.items():
-        try:
-            category = Category.objects.get(name=category_name)
-            existing_products = set(
-                Product.objects.filter(category=category).values_list('name', flat=True)
-            )
-            
-            for name, unit, purchase_price, selling_price in products:
-                if name in existing_products:
-                    continue
-                
-                quantity = random.randint(15, 200)
-                
-                bulk_products.append(Product(
-                    name=name,
-                    category=category,
-                    description=f'Качественный товар из категории {category_name}',
-                    price=Decimal(str(selling_price)),
-                    quantity=quantity,
-                    unit=unit
-                ))
-                created_count += 1
-                
-        except Category.DoesNotExist:
-            continue
-    
-    if bulk_products:
-        Product.objects.bulk_create(bulk_products, batch_size=100)
-        print(f'✓ Создано товаров: {created_count}')
-    
-    return created_count
+    try:
+        created_count = 0
+        bulk_products = []
+
+        for category_name, products in products_data.items():
+            try:
+                category = Category.objects.get(name=category_name)
+                existing_products = set(
+                    Product.objects.filter(category=category).values_list('name', flat=True)
+                )
+
+                for name, unit, purchase_price, selling_price in products:
+                    if name in existing_products:
+                        continue
+
+                    quantity = random.randint(15, 200)
+
+                    bulk_products.append(Product(
+                        name=name,
+                        category=category,
+                        description=f'Качественный товар из категории {category_name}',
+                        price=Decimal(str(selling_price)),
+                        quantity=quantity,
+                        unit=unit
+                    ))
+                    created_count += 1
+
+            except Category.DoesNotExist:
+                continue
+
+        if bulk_products:
+            Product.objects.bulk_create(bulk_products, batch_size=100)
+            print(f'✓ Создано товаров: {created_count}')
+
+        return created_count
+    except Exception as e:
+        print(f'✗ Ошибка создания товаров: {e}')
+        import traceback
+        traceback.print_exc()
+        return 0
 
 def create_users():
     """Создание тестовых пользователей"""
-    users_data = [
-        {
-            'username': 'manager',
-            'password': 'manager123',
-            'email': 'manager@prostornaya.ru',
-            'first_name': 'Мария',
-            'last_name': 'Менеджерова',
-            'role': 'manager',
-            'is_staff': True,
-            'is_superuser': True,
-        },
-        {
-            'username': 'cashier',
-            'password': 'cashier123',
-            'email': 'cashier@prostornaya.ru',
-            'first_name': 'Анна',
-            'last_name': 'Кассирова',
-            'role': 'cashier',
-            'is_staff': True,
-            'is_superuser': False,
-        },
-    ]
-    
-    created = 0
-    for user_data in users_data:
-        if User.objects.filter(username=user_data['username']).exists():
-            continue
-        
-        password = user_data.pop('password')
-        user = User.objects.create(**user_data)
-        user.set_password(password)
-        user.save()
-        created += 1
-        print(f'✓ Создан: {user.username} ({user.get_role_display()})')
-    
-    return created
+    try:
+        users_data = [
+            {
+                'username': 'manager',
+                'password': 'manager123',
+                'email': 'manager@prostornaya.ru',
+                'first_name': 'Мария',
+                'last_name': 'Менеджерова',
+                'role': 'manager',
+                'is_staff': True,
+                'is_superuser': True,
+            },
+            {
+                'username': 'cashier',
+                'password': 'cashier123',
+                'email': 'cashier@prostornaya.ru',
+                'first_name': 'Анна',
+                'last_name': 'Кассирова',
+                'role': 'cashier',
+                'is_staff': True,
+                'is_superuser': False,
+            },
+        ]
+
+        created = 0
+        for user_data in users_data:
+            if User.objects.filter(username=user_data['username']).exists():
+                print(f'→ Пользователь {user_data["username"]} уже существует')
+                continue
+
+            password = user_data.pop('password')
+            user = User.objects.create(**user_data)
+            user.set_password(password)
+            user.save()
+            created += 1
+            print(f'✓ Создан: {user.username} ({user.get_role_display()})')
+
+        return created
+    except Exception as e:
+        print(f'✗ Ошибка создания пользователей: {e}')
+        import traceback
+        traceback.print_exc()
+        return 0
 
 def init_database():
     """Главная функция инициализации"""
-    if User.objects.exists():
-        print('⚠ База данных уже содержит данные. Инициализация пропущена.')
-        return
-    
-    print('\n' + '='*70)
-    print('  Инициализация базы данных Railway')
-    print('='*70 + '\n')
-    
-    create_users()
-    create_categories()
-    create_products()
-    
-    print('\n' + '='*70)
-    print('  ✓ Инициализация завершена!')
-    print('='*70)
-    print('\nДанные для входа:')
-    print('  Менеджер: manager / manager123')
-    print('  Кассир:   cashier / cashier123')
-    print('='*70 + '\n')
+    try:
+        # Проверяем наличие таблиц
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM django_migrations")
+
+        # Проверяем, есть ли уже данные
+        if User.objects.exists():
+            print('⚠ База данных уже содержит данные. Инициализация пропущена.')
+            return
+
+        print('\n' + '='*70)
+        print('  Инициализация базы данных Railway')
+        print('='*70 + '\n')
+
+        users_created = create_users()
+        categories_created = create_categories()
+        products_created = create_products()
+
+        print('\n' + '='*70)
+        print('  ✓ Инициализация завершена!')
+        print('='*70)
+        print(f'\nСоздано:')
+        print(f'  Пользователей: {users_created}')
+        print(f'  Категорий: {categories_created}')
+        print(f'  Товаров: {products_created}')
+        print('\nДанные для входа:')
+        print('  Менеджер: manager / manager123')
+        print('  Кассир:   cashier / cashier123')
+        print('='*70 + '\n')
+
+    except Exception as e:
+        print(f'\n✗ Ошибка инициализации: {e}')
+        import traceback
+        traceback.print_exc()
+        # Не прерываем работу Railway
+        sys.exit(0)
 
 if __name__ == '__main__':
     init_database()
