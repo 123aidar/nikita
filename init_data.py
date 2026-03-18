@@ -437,8 +437,23 @@ def create_users():
                 continue
 
             password = user_data.pop('password')
-            user = User.objects.create(**user_data)
-            user.set_password(password)
+            is_superuser = user_data.pop('is_superuser')
+            role = user_data.pop('role')
+            is_staff = user_data.pop('is_staff')
+
+            if is_superuser:
+                user = User.objects.create_superuser(
+                    password=password,
+                    is_staff=is_staff,
+                    **user_data
+                )
+            else:
+                user = User.objects.create_user(
+                    password=password,
+                    is_staff=is_staff,
+                    **user_data
+                )
+            user.role = role
             user.save()
             created += 1
             print(f'✓ Создан: {user.username} ({user.get_role_display()})')
